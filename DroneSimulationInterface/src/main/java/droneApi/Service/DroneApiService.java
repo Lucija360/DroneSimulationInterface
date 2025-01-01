@@ -7,11 +7,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.core.io.ClassPathResource;
+import java.io.InputStream;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
+
 import java.util.ArrayList;
 import java.util.List;
 import droneApi.Entities.Drone;
@@ -22,37 +22,75 @@ public class DroneApiService {
 	 // Logger for logging application messages
     private static final Logger logger = LoggerFactory.getLogger(DroneApiService.class);
     
-    // Base URL for the Drone API -- we might move it to config file
-    private static final String API_URL = "https://dronesim.facets-labs.com/api/";
+    // Base URL for the Drone API loaded from configuration file
+    private final String apiUrl = loadApiUrl();
     
     // RestTemplate for making HTTP requests
     private final RestTemplate restTemplate = new RestTemplate();
     
     // Authorization token loaded from configuration file
     private final String token = loadApiToken();
+    
+    /**
+     * Loads the API base URL from a configuration file.
+     * @return the API base URL as a string.
+     */
+    private String loadApiUrl() {
+        try {
+            // Load the file as a classpath resource
+            InputStream inputStream = new ClassPathResource("config.json").getInputStream();
+            String content = new String(inputStream.readAllBytes());
 
+            // Parse the JSON content
+            JSONObject config = new JSONObject(content);
+            return config.getString("api_url");
+        } catch (Exception ex) {
+            logger.error("Failed to load API URL from config file.", ex);
+            throw new RuntimeException("API URL loading failed", ex);
+        }
+    }
+
+    
     /**
      * Loads the API token from a configuration file.
      * @return the API token as a string.
      */
     private String loadApiToken() {
         try {
-        	// Read the contents of the configuration file
-            String content = new String(Files.readAllBytes(Paths.get("config.json")));
-            
-            // Parse the content as JSON
+            // Load the file as a classpath resource
+            InputStream inputStream = new ClassPathResource("config.json").getInputStream();
+            String content = new String(inputStream.readAllBytes());
+
+            // Parse the JSON content
             JSONObject config = new JSONObject(content);
-            
-            // Return the token with the required prefix
             return "Token " + config.getString("api_token");
-            
         } catch (Exception ex) {
-        	// Log an error if token loading fails and rethrow an exception
             logger.error("Failed to load API token from config file.", ex);
             throw new RuntimeException("Token loading failed", ex);
         }
     }
     
+    
+    /**
+     * Verifies server accessibility.
+     * @return a success message if the server is accessible.
+     */
+    public String verifyServerAccessibility() {
+        logger.trace("Entered verifyServerAccessibility method.");
+        try {
+            String url = apiUrl;
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                logger.trace("Server is accessible.");
+                return "Server is accessible";
+            } else {
+                throw new RuntimeException("Server returned unexpected status: " + response.getStatusCode());
+            }
+        } catch (Exception ex) {
+            logger.error("Failed to verify server accessibility.", ex);
+            throw new RuntimeException("Failed to verify server accessibility.", ex);
+        }
+    }
     
     /**
      * Fetches a list of drones from the Drone API.
@@ -66,7 +104,7 @@ public class DroneApiService {
 
         try {
         	// Construct the request URL
-            String url = API_URL + "drones/?format=json";
+        	 String url = apiUrl + "drones/?format=json";
             
             // Create and set HTTP headers
             HttpHeaders headers = new HttpHeaders();
@@ -132,4 +170,6 @@ public class DroneApiService {
         logger.warn("fetchDroneDynamics is not implemented yet.");
         return new ArrayList<>();
     }
+    
+    
 }

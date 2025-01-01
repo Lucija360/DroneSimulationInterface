@@ -32,7 +32,25 @@ public class DroneController {
     public DroneController(DroneApiService droneApiService) {
         this.droneApiService = droneApiService;
     }
-
+    
+    /**
+     * Endpoint to verify server accessibility.
+     * Maps to GET requests at "/".
+     * @return a ResponseEntity with a success message or error response.
+     */
+    @GetMapping("/")
+    public ResponseEntity<String> verifyServer() {
+        logger.trace("Entered verifyServer endpoint.");
+        try {
+            String status = droneApiService.verifyServerAccessibility();
+            logger.trace("Server accessibility verified successfully.");
+            return ResponseEntity.ok(status);
+        } catch (Exception ex) {
+            logger.error("Failed to verify server accessibility: {}", ex.getMessage(), ex);
+            return ResponseEntity.status(500).body("Failed to verify server accessibility.");
+        }
+    }
+    
     /**
      * Endpoint to retrieve a list of available drones.
      * Maps to GET requests at "/api/drones/list".
@@ -60,7 +78,6 @@ public class DroneController {
         }
     }
     
-
     /**
      * Endpoint to retrieve drone types.
      * Maps to GET requests at "/api/dronetypes".
@@ -96,4 +113,5 @@ public class DroneController {
             return ResponseEntity.status(500).build();
         }
     }
+    
 }
