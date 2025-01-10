@@ -1,5 +1,6 @@
 package droneApi.Gui;
 
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -24,30 +25,40 @@ public class MainMenu extends JFrame {
                 // Transition to the Catalog screen
                 Catalog catalog = new Catalog();
                 catalog.setVisible(true);
-                dispose(); //Closes the main menu
-            }
-        });
-
-        // Drone Dashboard Button
-        JButton dashboardButton = new JButton("Drone Dashboard");
-        dashboardButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Transition to the Dashboard screen
-                Dashboard dashboard = new Dashboard();
-                dashboard.setVisible(true);
                 dispose(); // Closes the main menu
             }
         });
 
-        // Exit Button
-        JButton exitButton = new JButton("Exit");
-        exitButton.addActionListener(e -> System.exit(0));
+        // Drone Dynamics Button
+        JButton dynamicsButton = new JButton("Drone Dynamics");
+        dynamicsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Transition to the Drone Dynamics screen
+                DroneDynamics dynamics = new DroneDynamics();
+                dynamics.setVisible(true);
+                dispose(); // Closes the main menu
+            }
+        });
 
+        // Drones Button
+        JButton dronesButton = new JButton("Drones");
+        dronesButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Transition to the Drones screen
+                Drones drones = new Drones();
+                drones.setVisible(true);
+                dispose(); // Closes the main menu
+            }
+        });
+
+        
         // Add buttons to the main panel
         mainPanel.add(catalogButton);
-        mainPanel.add(dashboardButton);
-        mainPanel.add(exitButton);
+        mainPanel.add(dynamicsButton);
+        mainPanel.add(dronesButton);
+        
 
         add(mainPanel);
         setLocationRelativeTo(null);
