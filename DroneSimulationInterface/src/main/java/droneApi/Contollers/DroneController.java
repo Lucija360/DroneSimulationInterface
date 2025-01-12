@@ -6,16 +6,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import droneApi.Service.DroneApiService;
 import droneApi.Entities.Drone;
+import droneApi.Entities.DroneDynamics;
+import droneApi.Entities.DroneType;
 
 /**
  * REST controller for managing drone-related endpoints.
  */
 @RestController
-@RequestMapping("/api/drones")
+@RequestMapping("/api")
 public class DroneController {
 
 	// Logger for logging application events
@@ -56,13 +59,14 @@ public class DroneController {
      * Maps to GET requests at "/api/drones/list".
      * @return a ResponseEntity containing a list of Drone objects or an error response.
      */
-    @GetMapping("/drones/list")
-    public ResponseEntity<List<Drone>> getDrones() {
-        logger.trace("Entered getDrones endpoint.");
+    @GetMapping("drones/")
+    public ResponseEntity<List<Drone>> getDrones( @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(defaultValue = "0") int offset) {
+    	logger.trace("Entered getDrones endpoint with limit={} and offset={}", limit, offset);
         try {
         	
         	// Fetch the list of drones from the service layer
-            List<Drone> drones = droneApiService.fetchDrones();
+        	List<Drone> drones = droneApiService.fetchDrones(limit, offset);
             
             logger.trace("Successfully retrieved drones.");
             
@@ -78,40 +82,67 @@ public class DroneController {
         }
     }
     
+    
     /**
      * Endpoint to retrieve drone types.
      * Maps to GET requests at "/api/dronetypes".
+     * @param limit Number of results to return per page (default: 10).
+     * @param offset Index to start fetching results from (default: 0).
      * @return a ResponseEntity containing a list of drone types or an error response.
      */
-    @GetMapping("/dronetypes")
-    public ResponseEntity<List<String>> getDroneTypes() {
-        logger.trace("Entered getDroneTypes endpoint.");
+    @GetMapping("/dronetypes/")
+    public ResponseEntity<List<DroneType>> getDroneTypes(
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(defaultValue = "0") int offset) {
+        logger.trace("Entered getDroneTypes endpoint with limit={} and offset={}", limit, offset);
+
         try {
-            List<String> droneTypes = droneApiService.fetchDroneTypes();
+        	
+        	// Fetch the list of drone types from the service layer
+            List<DroneType> droneTypes = droneApiService.fetchDroneTypes(limit, offset);
+            
             logger.trace("Successfully retrieved drone types.");
+            
+            // Return the list of drones with a 200 OK status
             return ResponseEntity.ok(droneTypes);
         } catch (Exception ex) {
+        	
+        	// Log an error if drone type retrieval fails
             logger.error("Failed to retrieve drone types: {}", ex.getMessage(), ex);
+            
+            // Return a 500 Internal Server Error response
             return ResponseEntity.status(500).build();
         }
     }
+    
     
     /**
      * Endpoint to retrieve drone dynamics.
      * Maps to GET requests at "/api/dronedynamics".
+     * @param limit Number of results to return per page (default: 10).
+     * @param offset Index to start fetching results from (default: 0).
      * @return a ResponseEntity containing dynamic data for drones or an error response.
      */
-    @GetMapping("/dronedynamics")
-    public ResponseEntity<List<String>> getDroneDynamics() {
-        logger.trace("Entered getDroneDynamics endpoint.");
-        try {
-            List<String> droneDynamics = droneApiService.fetchDroneDynamics();
-            logger.trace("Successfully retrieved drone dynamics.");
-            return ResponseEntity.ok(droneDynamics);
-        } catch (Exception ex) {
-            logger.error("Failed to retrieve drone dynamics: {}", ex.getMessage(), ex);
-            return ResponseEntity.status(500).build();
-        }
-    }
-    
+    @GetMapping("/dronedynamics/")
+    public ResponseEntity<List<DroneDynamics>> getDroneDynamics(@RequestParam(defaultValue = "10") int limit,
+            @RequestParam(defaultValue = "0") int offset) {
+    	logger.trace("Entered getDroneDynamics endpoint with limit={} and offset={}", limit, offset);
+    	
+    	 try {
+    		 	// Fetch the list of drone dynamics from the service layer
+    	        List<DroneDynamics> droneDynamics = droneApiService.fetchDroneDynamics(limit, offset);
+    	        
+    	        logger.trace("Successfully retrieved drone dynamics.");
+    	        
+    	        // Return the list of drones with a 200 OK status
+    	        return ResponseEntity.ok(droneDynamics);
+    	    } catch (Exception ex) {
+    	    	
+    	    	// Log an error if drone dynamics retrieval fails
+    	        logger.error("Failed to retrieve drone dynamics: {}", ex.getMessage(), ex);
+    	        
+    	        // Return a 500 Internal Server Error response
+    	        return ResponseEntity.status(500).build();
+    	    }
+     }
 }
