@@ -72,14 +72,14 @@ public class Program implements WebMvcConfigurer {
         SpringApplication.run(Program.class, args);
 
         // Launch the Swing GUI in a separate thread
-
+/*
         javax.swing.SwingUtilities.invokeLater(() -> {
         	MainMenu mainMenu = new MainMenu(); //MainMenu class will be used here
         	mainMenu.setVisible(true);
      });
 
         System.out.println("Spring Boot Application and Swing GUI are running...");
-    }
+    */ }
 
     /**
      * Configures the default view controller.

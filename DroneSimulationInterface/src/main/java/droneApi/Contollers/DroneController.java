@@ -1,5 +1,7 @@
 package droneApi.Contollers;
 
+
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,9 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import droneApi.Service.DroneApiService;
 import droneApi.Entities.Drone;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 /**
  * REST controller for managing drone-related endpoints.
+ * 
  */
 @RestController
 @RequestMapping("/api/drones")
@@ -35,10 +41,17 @@ public class DroneController {
     
     /**
      * Endpoint to verify server accessibility.
-     * Maps to GET requests at "/".
+     * Maps to GET requests at "/api/drones".
      * @return a ResponseEntity with a success message or error response.
      */
-    @GetMapping("/")
+    @Operation(summary = "Verify server accessibility", description = "Checks if the server is accessible.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Server is accessible."),
+        @ApiResponse(responseCode = "500", description = "Failed to verify server accessibility.")
+    })
+    @GetMapping(value = "/", produces = "application/json")
+    
+    
     public ResponseEntity<String> verifyServer() {
         logger.trace("Entered verifyServer endpoint.");
         try {
@@ -56,7 +69,12 @@ public class DroneController {
      * Maps to GET requests at "/api/drones/list".
      * @return a ResponseEntity containing a list of Drone objects or an error response.
      */
-    @GetMapping("/drones/list")
+    @Operation(summary = "Get list of drones", description = "Fetches a list of all available drones.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "List of drones retrieved successfully."),
+        @ApiResponse(responseCode = "500", description = "Failed to retrieve drones.")
+    })
+    @GetMapping(value = "/list", produces = "application/json")
     public ResponseEntity<List<Drone>> getDrones() {
         logger.trace("Entered getDrones endpoint.");
         try {
@@ -83,7 +101,12 @@ public class DroneController {
      * Maps to GET requests at "/api/dronetypes".
      * @return a ResponseEntity containing a list of drone types or an error response.
      */
-    @GetMapping("/dronetypes")
+    @Operation(summary = "Get drone types", description = "Fetches a list of all available drone types.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "List of drone types retrieved successfully."),
+        @ApiResponse(responseCode = "500", description = "Failed to retrieve drone types.")
+    })
+    @GetMapping(value = "/dronetypes", produces = "application/json")
     public ResponseEntity<List<String>> getDroneTypes() {
         logger.trace("Entered getDroneTypes endpoint.");
         try {
@@ -101,7 +124,12 @@ public class DroneController {
      * Maps to GET requests at "/api/dronedynamics".
      * @return a ResponseEntity containing dynamic data for drones or an error response.
      */
-    @GetMapping("/dronedynamics")
+    @Operation(summary = "Get drone dynamics", description = "Fetches dynamic data for drones.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Drone dynamics retrieved successfully."),
+        @ApiResponse(responseCode = "500", description = "Failed to retrieve drone dynamics.")
+    })
+    @GetMapping(value = "/dronedynamics", produces = "application/json")
     public ResponseEntity<List<String>> getDroneDynamics() {
         logger.trace("Entered getDroneDynamics endpoint.");
         try {
