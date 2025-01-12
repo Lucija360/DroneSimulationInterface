@@ -3,18 +3,12 @@ package droneApi.Gui;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class Catalog extends JFrame {
 
     public Catalog() {
         setTitle("Drone Catalog");
-        setSize(600, 400);
+        setSize(800, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Catalog Panel
@@ -26,31 +20,27 @@ public class Catalog extends JFrame {
         headerLabel.setFont(new Font("Arial", Font.BOLD, 20));
         catalogPanel.add(headerLabel, BorderLayout.NORTH);
 
-        // Catalog Data (Placeholder)
-        String[] columnNames = {"Model", "Max Speed", "Manufacturer"};
+        // Catalog Data
+        String[] columnNames = {"ID", "Manufacturer", "Typename", "Weight", "Maximum Speed", "Battery Capacity", "Control Range", "Maximum Carriage"};
         Object[][] data = {
-            {"Drone X", "50 km/h", "Company A"},
-            {"Drone Y", "60 km/h", "Company B"},
-            {"Drone Z", "45 km/h", "Company C"}
+            {"1", "Company A", "Drone X", "2.5 kg", "50 km/h", "3000 mAh", "2 km", "1.5 kg"},
+            {"2", "Company B", "Drone Y", "3.0 kg", "60 km/h", "3500 mAh", "3 km", "2.0 kg"},
+            {"3", "Company C", "Drone Z", "2.0 kg", "45 km/h", "2800 mAh", "1.5 km", "1.2 kg"}
         };
         JTable catalogTable = new JTable(data, columnNames);
         JScrollPane scrollPane = new JScrollPane(catalogTable);
-
         catalogPanel.add(scrollPane, BorderLayout.CENTER);
 
         // Flight Dynamics Button
         JButton viewFlightDynamicsButton = new JButton("View Flight Dynamics");
         viewFlightDynamicsButton.setEnabled(false); // Initially disabled
-        viewFlightDynamicsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int selectedRow = catalogTable.getSelectedRow();
-                if (selectedRow != -1) {
-                    String selectedDrone = (String) catalogTable.getValueAt(selectedRow, 0);
-                    FlightDynamics flightDynamics = new FlightDynamics(selectedDrone);
-                    flightDynamics.setVisible(true);
-                    dispose(); // Closes the catalog screen
-                }
+        viewFlightDynamicsButton.addActionListener(e -> {
+            int selectedRow = catalogTable.getSelectedRow();
+            if (selectedRow != -1) {
+                String selectedDrone = (String) catalogTable.getValueAt(selectedRow, 0);
+                FlightDynamics flightDynamics = new FlightDynamics(selectedDrone);
+                flightDynamics.setVisible(true);
+                dispose(); // Closes the catalog screen
             }
         });
 
