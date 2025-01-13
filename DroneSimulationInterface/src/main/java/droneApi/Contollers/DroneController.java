@@ -9,6 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 import droneApi.Service.DroneApiService;
 import droneApi.Entities.Drone;
 import droneApi.Entities.DroneDynamics;
@@ -41,6 +45,11 @@ public class DroneController {
      * Maps to GET requests at "/".
      * @return a ResponseEntity with a success message or error response.
      */
+    @Operation(summary = "Check server accessibility", description = "Checks if the server is accessible.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Server is accessible."),
+        @ApiResponse(responseCode = "500", description = "Error checking server accessibility.")
+    })
     @GetMapping("/")
     public ResponseEntity<String> verifyServer() {
         logger.trace("Entered verifyServer endpoint.");
@@ -59,7 +68,12 @@ public class DroneController {
      * Maps to GET requests at "/api/drones/".
      * @return a ResponseEntity containing a list of Drone objects or an error response.
      */
-    @GetMapping("drones/")
+    @Operation(summary = "Retrieve list of drones", description = "Fetches a list of available drones.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved list of drones."),
+        @ApiResponse(responseCode = "500", description = "Error retrieving list of drones.")
+    })
+    @GetMapping(value = "/drones/", produces = "application/json")
     public ResponseEntity<List<Drone>> getDrones( @RequestParam(defaultValue = "10") int limit,
             @RequestParam(defaultValue = "0") int offset) {
     	logger.trace("Entered getDrones endpoint with limit={} and offset={}", limit, offset);
@@ -90,7 +104,12 @@ public class DroneController {
      * @param offset Index to start fetching results from (default: 0).
      * @return a ResponseEntity containing a list of drone types or an error response.
      */
-    @GetMapping("/dronetypes/")
+    @Operation(summary = "Retrieve list of drone types", description = "Fetches a list of available drone types.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved list of drone types."),
+        @ApiResponse(responseCode = "500", description = "Error retrieving list of drone types.")
+    })
+    @GetMapping(value = "/dronetypes/", produces = "application/json")
     public ResponseEntity<List<DroneType>> getDroneTypes(
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(defaultValue = "0") int offset) {
@@ -123,7 +142,12 @@ public class DroneController {
      * @param offset Index to start fetching results from (default: 0).
      * @return a ResponseEntity containing dynamic data for drones or an error response.
      */
-    @GetMapping("/dronedynamics/")
+    @Operation(summary = "Retrieve drone dynamics", description = "Fetches dynamic data for drones.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved drone dynamics."),
+        @ApiResponse(responseCode = "500", description = "Error retrieving drone dynamics.")
+    })
+    @GetMapping(value = "/dronedynamics/",  produces = "application/json")
     public ResponseEntity<List<DroneDynamics>> getDroneDynamics(@RequestParam(defaultValue = "10") int limit,
             @RequestParam(defaultValue = "0") int offset) {
     	logger.trace("Entered getDroneDynamics endpoint with limit={} and offset={}", limit, offset);
