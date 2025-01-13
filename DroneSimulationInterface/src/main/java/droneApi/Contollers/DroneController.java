@@ -56,7 +56,7 @@ public class DroneController {
     
     /**
      * Endpoint to retrieve a list of available drones.
-     * Maps to GET requests at "/api/drones/list".
+     * Maps to GET requests at "/api/drones/".
      * @return a ResponseEntity containing a list of Drone objects or an error response.
      */
     @GetMapping("drones/")
@@ -85,7 +85,7 @@ public class DroneController {
     
     /**
      * Endpoint to retrieve drone types.
-     * Maps to GET requests at "/api/dronetypes".
+     * Maps to GET requests at "/api/dronetypes/".
      * @param limit Number of results to return per page (default: 10).
      * @param offset Index to start fetching results from (default: 0).
      * @return a ResponseEntity containing a list of drone types or an error response.
@@ -118,7 +118,7 @@ public class DroneController {
     
     /**
      * Endpoint to retrieve drone dynamics.
-     * Maps to GET requests at "/api/dronedynamics".
+     * Maps to GET requests at "/api/dronedynamics/".
      * @param limit Number of results to return per page (default: 10).
      * @param offset Index to start fetching results from (default: 0).
      * @return a ResponseEntity containing dynamic data for drones or an error response.
