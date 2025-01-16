@@ -52,14 +52,25 @@ public class MainMenu extends JFrame {
                 dispose(); // Closes the main menu
             }
         });
+        
+     // Drone Dashboard Button
+        JButton dashboardButton = new JButton("Drone Dashboard");
+        dashboardButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Transition to the Drone Dashboard screen
+                DroneDashboard dashboard = new DroneDashboard();
+                dashboard.setVisible(true);
+                dispose(); // Closes the main menu
+            }
+        });
 
         
         // Add buttons to the main panel
         mainPanel.add(catalogButton);
         mainPanel.add(dynamicsButton);
         mainPanel.add(dronesButton);
-        
-
+        mainPanel.add(dashboardButton);
         add(mainPanel);
         setLocationRelativeTo(null);
     }
