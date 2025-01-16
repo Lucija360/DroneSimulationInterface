@@ -1,12 +1,9 @@
 package droneApi.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -14,10 +11,6 @@ import org.json.JSONObject;
 import org.springframework.core.io.ClassPathResource;
 import java.io.InputStream;
 
-
-import javax.net.ssl.*;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +28,7 @@ public class DroneApiService {
     private final String apiUrl = loadApiUrl();
     
     // RestTemplate for making HTTP requests
-    private final RestTemplate restTemplate = createRestTemplate();
+    private final RestTemplate restTemplate = new RestTemplate();
     
     // Authorization token loaded from configuration file
     private final String token = loadApiToken();
@@ -79,41 +72,6 @@ public class DroneApiService {
         }
     }
     
-    /**
-     * Creates a RestTemplate that bypasses SSL validation.
-     */
-    private RestTemplate createRestTemplate() {
-        try {
-            // Create an SSLContext that trusts all certificates
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, new TrustManager[]{new X509TrustManager() {
-                public X509Certificate[] getAcceptedIssuers() {
-                    return null;
-                }
-
-                public void checkClientTrusted(X509Certificate[] certs, String authType) {
-                }
-
-                public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                }
-            }}, new SecureRandom());
-
-            // Set the SSLContext to the default HttpsURLConnection
-            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-
-            // Disable hostname verification
-            HostnameVerifier allowAllHosts = (hostname, session) -> true;
-            HttpsURLConnection.setDefaultHostnameVerifier(allowAllHosts);
-
-            // Return RestTemplate
-            SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-            return new RestTemplate(requestFactory);
-        } catch (Exception ex) {
-            logger.error("Failed to create RestTemplate with bypassed SSL.", ex);
-            throw new RuntimeException("Failed to create RestTemplate", ex);
-        }
-    }
-    
     
     /**
      * Verifies server accessibility.
@@ -139,6 +97,7 @@ public class DroneApiService {
     /**
      * Fetches a list of drones from the Drone API.
      * @return a list of Drone objects.
+     * TODO: CHECK HEADERS FOR EXTERNAL API
      */   
     public List<Drone> fetchDrones(int limit, int offset) {
     	logger.trace("Entered fetchDrones method with limit={} and offset={}", limit, offset);
@@ -152,21 +111,15 @@ public class DroneApiService {
 
         try {
         	
-        	// Dynamically load the API token
-            String token = loadApiToken(); // Load the token from config.json
-        	
             // Create and set HTTP headers
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", token); // Use Token-based authentication
+            headers.set("Authorization", token);;
             headers.set("Accept", "application/json");
-            headers.set("User-Agent", "JavaDroneApp"); // Include a user agent for better API identification
+            headers.set("X-CSRFTOKEN", "EIvfrkU4LtpEOMnReepioKVXxtdAU70OTT6IUBSuea8ny963zt0DED5gZk8wqOSd");
 
-
-            // Create the entity with headers
-            HttpEntity<String> entity = new HttpEntity<>(headers);
 
             // Perform the HTTP GET request
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             
             // Check if the response status is OK
             if (response.getStatusCode() == HttpStatus.OK) {
@@ -214,23 +167,19 @@ public class DroneApiService {
     
     /**
      * Recursively fetches drone types from the next page URL.
+     *  TODO: CHECK HEADERS FOR EXTERNAL API
      */
     private List<Drone> fetchDronesFromNextPage(String nextUrl) {
         List<Drone> drones = new ArrayList<>();
         try {
-        	 // Dynamically load the API token
-            String token = loadApiToken(); // Load the token from config.json
-
-            // Create and set HTTP headers
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", token); // Use Token-based authentication
+            headers.set("Authorization", token);
             headers.set("Accept", "application/json");
-            headers.set("User-Agent", "JavaDroneApp"); // Include a user agent for better API identification
+            headers.set("X-CSRFTOKEN", "EIvfrkU4LtpEOMnReepioKVXxtdAU70OTT6IUBSuea8ny963zt0DED5gZk8wqOSd");
+
 
             logger.debug("Requesting next page of drones from URL: {}", nextUrl);
-            // Create the entity with headers
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> response = restTemplate.exchange(nextUrl, HttpMethod.GET, entity, String.class);
+            ResponseEntity<String> response = restTemplate.getForEntity(nextUrl, String.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 JSONObject jsonResponse = new JSONObject(response.getBody());
@@ -270,7 +219,7 @@ public class DroneApiService {
     /**
      * Fetches a list of drone types from the Drone API.
      * @return a list of Drone type objects.
-     * NOTE : Method and endpoint are functional -> data retrieval works
+     * TODO: CHECK HEADERS FOR EXTERNAL API
      */   
     public List<DroneType> fetchDroneTypes(int limit, int offset) {
         logger.trace("Entered fetchDroneTypes method.");
@@ -282,19 +231,13 @@ public class DroneApiService {
         String url = apiUrl + "dronetypes/?format=json&limit=" + limit + "&offset=" + offset;
         
         try {
-        	// Load the token dynamically using the loadApiToken method
-            String token = loadApiToken(); // Dynamically loads the token
-            
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", token); // Use Token-based authentication
+            headers.set("Authorization", token);
             headers.set("User-Agent", "JavaDroneApp");
             headers.set("Accept", "application/json");
 
-         // Create the entity with headers
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
             // Perform the HTTP GET request
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
 
             // Check if the response status is OK
             if (response.getStatusCode() == HttpStatus.OK) {
@@ -341,6 +284,7 @@ public class DroneApiService {
     /**
      * Fetches a list of drone dynamics from the Drone API.
      * @return a list of Drone dynamics objects.
+      * TODO: CHECK HEADERS FOR EXTERNAL API
      */   
     public List<DroneDynamics> fetchDroneDynamics(int limit, int offset) {
         logger.trace("Entered fetchDroneDynamics method.");
@@ -352,20 +296,14 @@ public class DroneApiService {
         String url = apiUrl + "dronedynamics/?format=json&limit=" + limit + "&offset=" + offset;
     
         try {
-        	// Dynamically load the API token
-            String token = loadApiToken(); // Load the token from config.json
-
-            // Create and set HTTP headers
+        	 // Create and set HTTP headers
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", token); // Use Token-based authentication
-            headers.set("User-Agent", "JavaDroneApp"); // Include a user agent for better API identification
+            headers.set("Authorization", token);
+            headers.set("User-Agent", "JavaDroneApp");
             headers.set("Accept", "application/json");
 
-            // Create the entity with headers
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
             // Perform the HTTP GET request
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
 
             // Check if the response status is OK
             if (response.getStatusCode() == HttpStatus.OK) {
@@ -408,5 +346,43 @@ public class DroneApiService {
         
         // Return the list of fetched drone dynamics
         return droneDynamicsList;
+    }
+    // The method for calculating the average speed of drones
+    /**
+     * Calculates the average speed of all drones from the "DroneDynamics" data.
+     * @param limit Limit on the number of entries retrieved
+     * @param offset Offset for pagination.
+     * @return Average speed of all drones as a double.
+     */
+    public double calculateAverageSpeed(int limit, int offset) {
+        logger.trace("Entered calculateAverageSpeed method with limit= and offset=", limit, offset);
+
+        // Retrieving the list of DroneDynamics
+        List<DroneDynamics> droneDynamicsList = fetchDroneDynamics(limit, offset);
+        
+        // If no data is available, return the average as 0
+        if (droneDynamicsList.isEmpty()) {
+            logger.info("No DroneDynamics data available.");
+            return 0;
+        }
+
+        // Sum of speeds and counter for the number of data points
+        double totalSpeed = 0;
+        int count = 0;
+
+        // Iterate through the list of DroneDynamics and sum the speed
+        for (DroneDynamics dynamics : droneDynamicsList) {
+            // Geschwindigkeitswert aus der DroneDynamics entnehmen
+            totalSpeed += dynamics.getSpeed();
+            count++;
+        }
+
+        // Calculation of the average
+        double averageSpeed = totalSpeed / count;
+
+        logger.info("Calculated average speed: ", averageSpeed);
+        
+        // Returning the average
+        return averageSpeed;
     }
 }
