@@ -248,4 +248,4 @@ class BarChartPanel extends JPanel {
         g2d.drawLine(padding, height - padding, width - padding, height - padding); // X-Achse
         g2d.drawLine(padding, padding, padding, height - padding); // Y-Achse
     }
-}
+} 

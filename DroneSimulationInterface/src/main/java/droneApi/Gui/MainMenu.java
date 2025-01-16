@@ -15,7 +15,7 @@ public class MainMenu extends JFrame {
 
         // Main Panel
         JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new GridLayout(3, 1, 10, 10));
+        mainPanel.setLayout(new GridLayout(4, 1, 10, 10));
 
         // Drone Catalog Button
         JButton catalogButton = new JButton("Drone Catalog");
