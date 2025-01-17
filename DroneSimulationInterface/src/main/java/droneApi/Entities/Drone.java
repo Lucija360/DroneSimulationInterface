@@ -20,9 +20,11 @@ public class Drone {
      @JsonProperty("serialnumber") // Maps JSON field "serialnumber" to this field
     // Unique serial number of the drone
     private String serialnumber;
+     
      @JsonProperty("carriage_weight") // Maps JSON field "carriage_weight" to this field
     // Weight of the drone's carriage
     private int carriageWeight;
+     
      @JsonProperty("carriage_type") // Maps JSON field "carriage_type" to this field
     // Type of the drone's carriage (SEN, ACT, NOT)
     private String carriageType;
