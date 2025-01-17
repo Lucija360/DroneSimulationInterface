@@ -19,7 +19,7 @@ import droneApi.Entities.DroneDynamics;
 import droneApi.Entities.DroneType;
 
 /**
- * REST controller for managing drone-related endpoints.
+ * REST controller for managing drone-related endpoints
  */
 @RestController
 @RequestMapping("/api")
@@ -32,8 +32,8 @@ public class DroneController {
     private final DroneApiService droneApiService;
 
     /**
-     * Constructor that initializes the DroneApiService using dependency injection.
-     * @param droneApiService the service that interacts with the drone API.
+     * Constructor that initializes the DroneApiService using dependency injection
+     * @param droneApiService the service that interacts with the drone API
      */
     @Autowired
     public DroneController(DroneApiService droneApiService) {
@@ -41,9 +41,9 @@ public class DroneController {
     }
     
     /**
-     * Endpoint to verify server accessibility.
-     * Maps to GET requests at "/".
-     * @return a ResponseEntity with a success message or error response.
+     * Endpoint to verify server accessibility
+     * Maps to GET requests at "/"
+     * @return a ResponseEntity with a success message or error response
      */
     @Operation(summary = "Check server accessibility", description = "Checks if the server is accessible.")
     @ApiResponses(value = {
@@ -64,9 +64,9 @@ public class DroneController {
     }
     
     /**
-     * Endpoint to retrieve a list of available drones.
-     * Maps to GET requests at "/api/drones/".
-     * @return a ResponseEntity containing a list of Drone objects or an error response.
+     * Endpoint to retrieve a list of available drones
+     * Maps to GET requests at "/api/drones/"
+     * @return a ResponseEntity containing a list of Drone objects or an error response
      */
     @Operation(summary = "Retrieve list of drones", description = "Fetches a list of available drones.")
     @ApiResponses(value = {
@@ -98,11 +98,11 @@ public class DroneController {
     
     
     /**
-     * Endpoint to retrieve drone types.
-     * Maps to GET requests at "/api/dronetypes/".
-     * @param limit Number of results to return per page (default: 10).
-     * @param offset Index to start fetching results from (default: 0).
-     * @return a ResponseEntity containing a list of drone types or an error response.
+     * Endpoint to retrieve drone types
+     * Maps to GET requests at "/api/dronetypes/"
+     * @param limit Number of results to return per page 
+     * @param offset Index to start fetching results from 
+     * @return a ResponseEntity containing a list of drone types or an error response
      */
     @Operation(summary = "Retrieve list of drone types", description = "Fetches a list of available drone types.")
     @ApiResponses(value = {
@@ -136,11 +136,11 @@ public class DroneController {
     
     
     /**
-     * Endpoint to retrieve drone dynamics.
-     * Maps to GET requests at "/api/dronedynamics/".
-     * @param limit Number of results to return per page (default: 10).
-     * @param offset Index to start fetching results from (default: 0).
-     * @return a ResponseEntity containing dynamic data for drones or an error response.
+     * Endpoint to retrieve drone dynamics
+     * Maps to GET requests at "/api/dronedynamics/"
+     * @param limit Number of results to return per page 
+     * @param offset Index to start fetching results from 
+     * @return a ResponseEntity containing dynamic data for drones or an error response
      */
     @Operation(summary = "Retrieve drone dynamics", description = "Fetches dynamic data for drones.")
     @ApiResponses(value = {
@@ -169,4 +169,44 @@ public class DroneController {
     	        return ResponseEntity.status(500).build();
     	    }
      }
+    /**
+     * Endpoint to calculate the average speed of all drones
+     * Maps to GET requests at "/api/drones/average-speed/all"
+     * 
+     * @param limit the maximum number of entries to consider 
+     * @param offset the starting point for pagination 
+     * @return a ResponseEntity containing the average speed as a double or an error response
+     */
+    @Operation(
+    	    summary = "Calculate average speed of all drones",
+    	    description = "Fetches the average speed of all drones based on DroneDynamics data."
+    	)
+    	@ApiResponses(value = {
+    	    @ApiResponse(responseCode = "200", description = "Successfully calculated the average speed."),
+    	    @ApiResponse(responseCode = "500", description = "Error calculating the average speed.")
+    	})
+    	@GetMapping(value = "/drones/average-speed/all", produces = "application/json")
+    	public ResponseEntity<Double> getAverageSpeed(
+    	        @RequestParam(defaultValue = "100") int limit,
+    	        @RequestParam(defaultValue = "0") int offset) {
+    	       logger.trace("Entered getAverageSpeed endpoint with limit={} and offset={}", limit, offset);
+    	
+    	    try {
+    	        // Calling the method in the service
+    	        double averageSpeed = droneApiService.calculateAverageSpeed(limit, offset);
+    	        
+    	        // Log the calculated average speed along with the input parameters
+    	        logger.info("Calculated average speed: {} for limit={} and offset={}", averageSpeed, limit, offset);
+
+
+    	        // Return of the calculated average speed
+    	        return ResponseEntity.ok(averageSpeed);
+    	    } catch (Exception ex) {
+    	        // error handling
+    	        logger.error("Error while calculating the average speed.", ex);
+    	        return ResponseEntity.status(500).build();
+    	    }
+    	}
+
+    
 }
