@@ -355,7 +355,7 @@ public class DroneApiService {
      * @return Average speed of all drones as a double.
      */
     public double calculateAverageSpeed(int limit, int offset) {
-        logger.trace("Entered calculateAverageSpeed method with limit= and offset=", limit, offset);
+        logger.trace("Entered calculateAverageSpeed method with limit={} and offset={}", limit, offset);
 
         // Retrieving the list of DroneDynamics
         List<DroneDynamics> droneDynamicsList = fetchDroneDynamics(limit, offset);
@@ -380,7 +380,7 @@ public class DroneApiService {
         // Calculation of the average
         double averageSpeed = totalSpeed / count;
 
-        logger.info("Calculated average speed: ", averageSpeed);
+        logger.info("Calculated average speed: {}", averageSpeed);
         
         // Returning the average
         return averageSpeed;
