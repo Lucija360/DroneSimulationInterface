@@ -1,6 +1,9 @@
 package droneApi.Entities;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import java.util.Date;
 
 /**
  * Entity class representing a Drone.
@@ -11,11 +14,14 @@ public class Drone {
     private int id;
     
     @JsonProperty("dronetype") // Maps JSON field "dronetype" to this field
-    private String dronetype;
+    private String dronetype;	// The field now holds the name of the drone type, not the URL.
      
      @JsonProperty("created") // Maps JSON field "created" to this field
-    // Timestamp when the drone was created
-    private String created;
+     @JsonFormat(pattern = "MMM. dd, yyyy, h:mm a", shape = JsonFormat.Shape.STRING)	// Specifies the format of the date when serialized
+     																					// The date is serialized as a string in the format you define,
+     																					// making it easier to read and understand.
+     // Timestamp when the drone was created
+    private Date created;
     
      @JsonProperty("serialnumber") // Maps JSON field "serialnumber" to this field
     // Unique serial number of the drone
@@ -40,9 +46,9 @@ public class Drone {
      * @param carriageWeight Maximum weight capacity of the drone
      * @param carriageType Type of carriage the drone is equipped with
      */
-    public Drone(int id, String dronetype, String created, String serialnumber, int carriageWeight, String carriageType) {
+    public Drone(int id, String dronetype, Date created, String serialnumber, int carriageWeight, String carriageType) {
         this.id = id;
-        this.dronetype = dronetype;
+        this.dronetype = dronetype;	// Ensure this is the name, not the URL
         this.created = created;
         this.serialnumber = serialnumber;
         this.carriageWeight = carriageWeight;
@@ -53,11 +59,11 @@ public class Drone {
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
-    public String getDronetype() { return dronetype; }
+    public String getDronetype() { return dronetype; }	// Returns the name of the drone type
     public void setDronetype(String dronetype) { this.dronetype = dronetype; }
 
-    public String getCreated() { return created; }
-    public void setCreated(String created) { this.created = created; }
+    public Date getCreated() { return created; }
+    public void setCreated(Date created) { this.created = created; }
 
     public String getSerialnumber() { return serialnumber; }
     public void setSerialnumber(String serialnumber) { this.serialnumber = serialnumber; }

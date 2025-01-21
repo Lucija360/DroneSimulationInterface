@@ -7,8 +7,10 @@ import org.springframework.web.client.RestTemplate;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
 
 public class Drones extends JFrame {
 
@@ -78,10 +80,14 @@ public class Drones extends JFrame {
 
             // Add fetched drones to the table model
             for (Drone drone : drones) {
-                Object[] row = {
+            	String droneTypeName = drone.getDronetype();	//Human-readable drone type name
+            	// Convert the Date to a formatted string
+            	String formattedDate = new SimpleDateFormat("MMM. dd, yyyy, h:mm a").format(drone.getCreated());
+                
+            	Object[] row = {
                     drone.getId(),
-                    drone.getDronetype(),
-                    drone.getCreated(),
+                    droneTypeName,
+                    formattedDate,	//Formatted dat for display
                     drone.getSerialnumber(),
                     drone.getCarriageWeight(),
                     drone.getCarriageType()

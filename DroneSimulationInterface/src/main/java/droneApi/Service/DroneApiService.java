@@ -22,6 +22,11 @@ import java.security.cert.X509Certificate;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
+
 import droneApi.Entities.Drone;
 import droneApi.Entities.DroneDynamics;
 import droneApi.Entities.DroneType;
@@ -138,6 +143,57 @@ public class DroneApiService {
     }
     
     /**
+     * Fetches the drone type name based on the URL
+     * URL response is a URL pointing to another endpoint (e.g., http://dronesim.facets-labs.com/api/dronetypes/84/)
+     * @param droneTypeUrl URL of the drone type to fetch details for.
+     * API call to drone type URL to return the name and other details.
+     * @return the name of the drone or unknown drone type name
+     */
+    private String  fetchDroneTypeName(String droneTypeUrl) {
+    	try {        	
+        	// Create the HTTP request with authorization and other necessary headers
+        	HttpHeaders headers = new HttpHeaders();
+        	headers.set("Authorization", token);	// API token for authentication
+        	headers.set("Accept", "application/json");
+        	headers.set("User-Agent", "JavaDroneApp"); // Include a user agent for better API identification
+        	
+        	// Create the entity with headers
+        	HttpEntity<String> entity = new HttpEntity<>(headers);
+        	
+        	// Log the request URL
+        	logger.debug("Fetching drone type details from URL; {}", droneTypeUrl);
+        	
+        	// Send the HTTP GET request to fetch the drone type details (name, etc,...)
+        	ResponseEntity<String> response = restTemplate.exchange(droneTypeUrl, HttpMethod.GET, entity, String.class);
+        	
+        	// Check if the response status is OK
+        	if (response.getStatusCode() == HttpStatus.OK) {
+        		// Parse the JSON response to inspect the structure
+        		JSONObject jsonResponse = new JSONObject(response.getBody());
+        		logger.debug("Drone Type Details Response:{}", jsonResponse.toString());
+        		
+        		// If the "manufacturer" and "typename" fields exist, construct the name
+        		if (jsonResponse.has("manufacturer") && jsonResponse.has("typename")) {
+        			String manufacturer = jsonResponse.getString("manufacturer");
+        			String typename = jsonResponse.getString("typename");
+        			
+        			// Combine manufacturer and typename into the required format
+        			return manufacturer + ": " + typename;	//e.g., "GoPro: Karma"
+        		} else {
+        			logger.warn("Drone type details do not contain manufacturer and typename. Returning 'Unknown Drone Type'.");
+        			return "Unknown Drone Type";
+        		}
+        	} else {
+        		logger.error("Failed to fetch drone type details from URL: {}. Status code: {}", droneTypeUrl, response.getStatusCode());
+        		return "Unknown Drone Type";	// In case the API response is not OK
+        	}		
+    	} catch (Exception ex) {
+    		logger.error("Error fetching drone type name from URL:{}. Error: {}", droneTypeUrl, ex.getMessage());
+    		return "Unknown Drone Type";	// In case of any error
+    	}
+    }	     
+    
+    /**
      * Fetches a list of drones from the Drone API.
      * @return a list of Drone objects.
      */   
@@ -173,15 +229,30 @@ public class DroneApiService {
             if (response.getStatusCode() == HttpStatus.OK) {
                 JSONObject jsonResponse = new JSONObject(response.getBody());
                 var droneArray = jsonResponse.getJSONArray("results");
-
+                
+                // Define a DateTimeFormatter for ISO 8601 format with offset
+                DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+                
                 for (int i = 0; i < droneArray.length(); i++) {
                     var obj = droneArray.getJSONObject(i);
+                    
+                    //Intergrating fetchDroneTypeName()
+                    //Fetch the drone type name based on the URL (droneType field)
+                    String droneTypeUrl = obj.getString("dronetype");	// Assuming it's a URL
+                    String droneTypeName = fetchDroneTypeName(droneTypeUrl);	// Fetch the name using the intergrated method
+                    
+                    // Parse the created field with DateTimeFormatter
+                    String createdString = obj.getString("created");
+                    OffsetDateTime createdDate = OffsetDateTime.parse(createdString, formatter);
 
-                    // Create a Drone object and populate its fields
+                    // Convert OffsetDateTime to Date
+                    Date date = Date.from(createdDate.toInstant());                 
+                                        
+                    // Create a Drone object and populate its fields with the formatted date and droneType name
                     Drone drone = new Drone(
                         obj.getInt("id"),
-                        obj.getString("dronetype"),
-                        obj.getString("created"),
+                        droneTypeName,	// Replace the URL wit the human-readable name
+                        date,		// Use the formatted Date object
                         obj.getString("serialnumber"),
                         obj.getInt("carriage_weight"),
                         obj.getString("carriage_type")
@@ -236,14 +307,30 @@ public class DroneApiService {
             if (response.getStatusCode() == HttpStatus.OK) {
                 JSONObject jsonResponse = new JSONObject(response.getBody());
                 var droneArray = jsonResponse.getJSONArray("results");
+                
+                // Define a DateTimeFormatter for ISO 8601 format with offset
+                DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
                 for (int i = 0; i < droneArray.length(); i++) {
                     var obj = droneArray.getJSONObject(i);
+                    
+                    //Intergrating fetchDroneTypeName()
+                    //Fetch the drone type name based on the URL (droneType field)
+                    String droneTypeUrl = obj.getString("dronetype");	// Assuming it's a URL
+                    String droneTypeName = fetchDroneTypeName(droneTypeUrl);	// Fetch the name using the intergrated method
+                                        
+                    // Parse the created field with DateTimeFormatter
+                    String createdString = obj.getString("created");
+                    OffsetDateTime createdDate = OffsetDateTime.parse(createdString, formatter);
 
+                    // Convert OffsetDateTime to Date
+                    Date date = Date.from(createdDate.toInstant());
+
+                    // Create a Drone object and populate its fields with the formatted date and droneType name
                     Drone drone = new Drone(
                         obj.getInt("id"),
-                        obj.getString("dronetype"), // URL for dronetype, handle as needed
-                        obj.getString("created"),
+                        droneTypeName,	// Replace the URL wit the human-readable name
+                        date,		// Use the formatted Date object
                         obj.getString("serialnumber"),
                         obj.getInt("carriage_weight"),
                         obj.getString("carriage_type")
