@@ -1,43 +1,59 @@
 package droneApi.Entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Entity class representing dynamic data of a Drone.
  */
 public class DroneDynamics {
 	
+		@JsonProperty("drone")
 		// Name or identifier of the drone
 	  	private String drone;
 	  	
+		@JsonProperty("timestamp")
 	  	// Timestamp indicating the recorded time of the dynamic data
 	    private String timestamp;
 	    
+		@JsonProperty("speed")
 	    // Current speed of the drone
 	    private int speed;
 	    
+		@JsonProperty("align_roll")
 	    // Drone's alignment on the roll axis
 	    private String alignRoll;
 	    
+		@JsonProperty("align_pitch")
 	    // Drone's alignment on the pitch axis
 	    private String alignPitch;
 	    
+		@JsonProperty("align_yaw")
 	    // Drone's alignment on the yaw axis
 	    private String alignYaw;
 	    
+		@JsonProperty("longitude")
 	    // Longitude of the drone's position
 	    private String longitude;
-	    
+		
+		@JsonProperty("latitude")
 	    // Latitude of the drone's position
 	    private String latitude;
 	    
+		@JsonProperty("battery_status")
 	    // Current battery status of the drone in percentage
 	    private int batteryStatus;
 	    
+		@JsonProperty("last_seen")
 	    // Last recorded time the drone was active
 	    private String lastSeen;
 	    
+		 @JsonProperty("status")
 	    // Current operational status of the drone
 	    private String status;
 	    
+		public DroneDynamics() {
+			    // Default constructor required for deserialization
+		}
 	    
 	    /**
 	     * Constructor to initialize all fields of DroneDynamics.
