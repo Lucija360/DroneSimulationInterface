@@ -142,9 +142,10 @@ public class DroneApiService {
         }
     }
     
+    
     /**
      * Fetches the drone type name based on the URL
-     * URL response is a URL pointing to another endpoint (e.g., http://dronesim.facets-labs.com/api/dronetypes/84/)
+     * URL response is a URL pointing to another endpoint (e.g., http://dronesim.facets-labs.com/api/dronetypes/id/)
      * @param droneTypeUrl URL of the drone type to fetch details for.
      * API call to drone type URL to return the name and other details.
      * @return the name of the drone or unknown drone type name
@@ -192,6 +193,7 @@ public class DroneApiService {
     		return "Unknown Drone Type";	// In case of any error
     	}
     }	     
+    
     
     /**
      * Fetches a list of drones from the Drone API.

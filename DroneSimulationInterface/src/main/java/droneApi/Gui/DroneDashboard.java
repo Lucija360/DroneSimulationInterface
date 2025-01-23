@@ -1,107 +1,184 @@
 package droneApi.Gui;
 
-import javax.swing.*;
+import droneApi.Entities.Drone;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DroneDashboard extends JFrame {
 
-    public DroneDashboard() {
-        setTitle("Drone Dashboard");
-        setSize(900, 700);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	 private JTable dynamicsTable;
+	 private DefaultTableModel tableModel;
 
-        // main layout with BorderLayout
-        setLayout(new BorderLayout(10, 10));
+	    public DroneDashboard() {
+	        setTitle("Drone Dashboard");
+	        setSize(900, 700);
+	        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // HEADER (NORTH)
-        JLabel headerLabel = new JLabel("Drone Dashboard", SwingConstants.CENTER);
-        headerLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        add(headerLabel, BorderLayout.NORTH);	// add Header
+	        // Main layout with BorderLayout
+	        setLayout(new BorderLayout(10, 10));
 
-        // Center Panel (Panels in a 2x2 Grid)
-        JPanel centerPanel = new JPanel(new GridLayout(2, 2, 10, 10));
-        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // distance between the Panels
+	        // HEADER (NORTH)
+	        JLabel headerLabel = new JLabel("Drone Dashboard", SwingConstants.CENTER);
+	        headerLabel.setFont(new Font("Arial", Font.BOLD, 20));
+	        add(headerLabel, BorderLayout.NORTH);
 
-        // Table Panel
-        
-        // calculations for the table
-        // total traveled distance(in km) = speed(in km/h) * time difference inbetween timestamps(in hours)
-        // average speed over time(in km/h) = sum of all speeds(in km/h)/number of all timestamp speed measures
-        // battery consumption per km = battery status(in %)/total traveled distance(in km)
-        // payload utilization(in %) = carriage weight/maximum carriage * 100
-        
-        JPanel tablePanel = new JPanel(new BorderLayout());
-        String[] columnNames = {"ID", "Dronetype", "Created", "Serialnumber", "Carriage Weight", "Carriage Type", 
-                                "Average speed over time", "Total distance traveled for each drone", 
-                                "Battery consumption per km", "Payload utilization"};
-        Object[][] data = {
-                {1, "Quadcopter", "2025-01-01", "SN12345", 15.5, "Package", 20, 200, 40, 70},
-                {2, "Hexacopter", "2025-01-02", "SN67890", 20.0, "Medical", 10, 450, 50, 70},
-                {3, "Octocopter", "2025-01-03", "SN54321", 25.0, "Survey", 20, 300, 30, 90}
-        };
-        JTable dynamicsTable = new JTable(data, columnNames);
-        JScrollPane scrollPane = new JScrollPane(dynamicsTable);
-        tablePanel.add(new JLabel("Drone Data Table", SwingConstants.CENTER), BorderLayout.NORTH);
-        tablePanel.add(scrollPane, BorderLayout.CENTER);
-        centerPanel.add(tablePanel);
-        
-        // Pie Chart Panel
-        JPanel pieChartPanel = new JPanel(new BorderLayout());
-        pieChartPanel.add(new JLabel("Manufacturer", SwingConstants.CENTER), BorderLayout.NORTH);
-        pieChartPanel.add(new PieChartPanel(), BorderLayout.CENTER);
-        centerPanel.add(pieChartPanel);
-        
-        // Bar Chart Panel
-        int[] values = {20, 15, 30, 45};
-        String[] labels = {"Drone A", "Drone B", "Drone C", "Drone D"}; 
-        Color[] colors = {Color.RED, Color.GRAY, Color.WHITE, Color.BLUE};
+	        // Center Panel (Panels in a 2x2 Grid)
+	        JPanel centerPanel = new JPanel(new GridLayout(2, 2, 10, 10));
+	        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Ensure spacing
 
-        BarChartPanel barChartPanel = new BarChartPanel(values, labels, colors);
-        barChartPanel.add(new JLabel("Average speed", SwingConstants.CENTER), BorderLayout.NORTH);
-        barChartPanel.setPreferredSize(new Dimension(400, 300));
-        centerPanel.add(barChartPanel);
+	        // Table Panel
+	        
+	        // calculations for the table
+	        // total traveled distance(in km) = speed(in km/h) * time difference inbetween timestamps(in hours)
+	        // average speed over time(in km/h) = sum of all speeds(in km/h)/number of all timestamp speed measures
+	        // battery consumption per km = battery status(in %)/total traveled distance(in km)
+	        // payload utilization(in %) = carriage weight/maximum carriage * 100
+	        
+	        // Table Panel with BorderLayout
+	        JPanel tablePanel = new JPanel(new BorderLayout());
+	        tablePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));  // Maintain gray spacing
 
-        // Info Panel
-        JPanel infoPanel = new JPanel();
-        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-        infoPanel.add(new JLabel("Info Panel", SwingConstants.CENTER));
-        infoPanel.add(new JLabel("Battery Status: 85%"));
-        infoPanel.add(new JLabel("Current Speed: 15 km/h"));
-        infoPanel.add(new JLabel("Payload Utilization: 70%"));
-        centerPanel.add(infoPanel);
+	        // Column names and table initialization
+	        String[] columnNames = {"ID", "Dronetype", "Created", "Serialnumber", "Carriage Weight",
+	                "Carriage Type", "Average speed over time", "Total distance traveled",
+	                "Battery consumption per km", "Payload utilization"};
 
-        add(centerPanel, BorderLayout.CENTER);	// add Panels to Center Panel
-        
-        centerPanel.setBackground(Color.LIGHT_GRAY);	// set Background color
+	        tableModel = new DefaultTableModel(columnNames, 0);
+	        dynamicsTable = new JTable(tableModel);
 
-        // FOOTER (SOUTH)
-        JPanel footerPanel = new JPanel();
-        JButton refreshButton = new JButton("Refresh");
-        refreshButton.addActionListener(e -> JOptionPane.showMessageDialog(null, "Data refreshed!"));
-        footerPanel.add(refreshButton); // Refresh-Button
+	        // Scroll pane for the table with fixed preferred size
+	        JScrollPane scrollPane = new JScrollPane(dynamicsTable);
+	        scrollPane.setPreferredSize(new Dimension(600, 150));  // Fixed size to prevent overflow
 
-        JButton backToMenuButton = new JButton("Back to Main Menu");
-        footerPanel.add(backToMenuButton); // Back-Button
-        backToMenuButton.addActionListener(e -> {
-            MainMenu mainMenu = new MainMenu();
-            mainMenu.setVisible(true);
-            dispose();
-        });
-        add(footerPanel, BorderLayout.SOUTH); // add Buttons to Footer Panel        
-        
-        setLocationRelativeTo(null); // center frame
-        setVisible(true);
-    }
+	        tablePanel.add(new JLabel("Drone Data Table", SwingConstants.CENTER), BorderLayout.NORTH);
+	        tablePanel.add(scrollPane, BorderLayout.CENTER);
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            DroneDashboard dashboard = new DroneDashboard();
-            dashboard.setVisible(true);
-        });
-    }
+	        centerPanel.add(tablePanel);
+
+	        // Pie Chart Panel
+	        JPanel pieChartPanel = new JPanel(new BorderLayout());
+	        pieChartPanel.add(new JLabel("Manufacturer", SwingConstants.CENTER), BorderLayout.NORTH);
+	        pieChartPanel.add(new PieChartPanel(), BorderLayout.CENTER);
+	        centerPanel.add(pieChartPanel);
+
+	        // Bar Chart Panel
+	        int[] values = {20, 15, 30, 45};
+	        String[] labels = {"Drone A", "Drone B", "Drone C", "Drone D"}; 
+	        Color[] colors = {Color.RED, Color.GRAY, Color.WHITE, Color.BLUE};
+
+	        BarChartPanel barChartPanel = new BarChartPanel(values, labels, colors);
+	        barChartPanel.add(new JLabel("Average speed", SwingConstants.CENTER), BorderLayout.NORTH);
+	        barChartPanel.setPreferredSize(new Dimension(400, 300));
+	        centerPanel.add(barChartPanel);
+
+	        // Info Panel
+	        JPanel infoPanel = new JPanel();
+	        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+	        infoPanel.add(new JLabel("Info Panel", SwingConstants.CENTER));
+	        infoPanel.add(new JLabel("Battery Status: 85%"));
+	        infoPanel.add(new JLabel("Current Speed: 15 km/h"));
+	        infoPanel.add(new JLabel("Payload Utilization: 70%"));
+	        centerPanel.add(infoPanel);
+
+	        add(centerPanel, BorderLayout.CENTER);
+	        
+	        centerPanel.setBackground(Color.LIGHT_GRAY);
+
+	        // FOOTER (SOUTH)
+	        JPanel footerPanel = new JPanel();
+	        footerPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 10));
+
+	        JButton refreshButton = new JButton("Refresh Data");
+	        refreshButton.addActionListener(e -> {
+	            fetchAndDisplayDrones();
+	            JOptionPane.showMessageDialog(this, "Data refreshed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+	        });
+	        footerPanel.add(refreshButton);
+
+	        JButton backToMenuButton = new JButton("Back to Main Menu");
+	        backToMenuButton.addActionListener(e -> {
+	            MainMenu mainMenu = new MainMenu();
+	            mainMenu.setVisible(true);
+	            dispose();
+	        });
+	        footerPanel.add(backToMenuButton);
+
+	        add(footerPanel, BorderLayout.SOUTH);
+
+	        setLocationRelativeTo(null);
+
+	        // Load drone data automatically on page load without success message
+	        fetchAndDisplayDrones();
+	    }
+
+	    /**
+	     * Fetch drone data from the API and display it in the table.
+	     */
+	    private void fetchAndDisplayDrones() {
+	        try {
+	            List<Drone> drones = fetchDronesFromApi(10, 0);
+
+	            // Clear existing rows
+	            tableModel.setRowCount(0);
+
+	            // Add fetched drones to the table model
+	            for (Drone drone : drones) {
+	                String formattedDate = new SimpleDateFormat("MMM. dd, yyyy, h:mm a").format(drone.getCreated());
+	                Object[] row = {
+	                        drone.getId(),
+	                        drone.getDronetype(),
+	                        formattedDate,
+	                        drone.getSerialnumber(),
+	                        drone.getCarriageWeight(),
+	                        drone.getCarriageType(),
+	                        "20 km/h",  // Hardcoded values
+	                        "200 km",   // Hardcoded values
+	                        "40 mAh/km", // Hardcoded values
+	                        "70%"      // Hardcoded values
+	                };
+	                tableModel.addRow(row);
+	            }
+	        } catch (Exception ex) {
+	            JOptionPane.showMessageDialog(this, "Failed to fetch drone data: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+	        }
+	    }
+
+	    /**
+	     * Fetch drones from the DroneController API.
+	     */
+	    private List<Drone> fetchDronesFromApi(int limit, int offset) {
+	        List<Drone> drones = new ArrayList<>();
+	        String apiUrl = "http://localhost:8080/api/drones/?limit=" + limit + "&offset=" + offset;
+
+	        try {
+	            RestTemplate restTemplate = new RestTemplate();
+	            ResponseEntity<Drone[]> response = restTemplate.getForEntity(apiUrl, Drone[].class);
+
+	            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+	                for (Drone drone : response.getBody()) {
+	                    drones.add(drone);
+	                }
+	            }
+	        } catch (Exception ex) {
+	            throw new RuntimeException("Error fetching drones from API: " + ex.getMessage(), ex);
+	        }
+
+	        return drones;
+	    }
+
+	    public static void main(String[] args) {
+	        SwingUtilities.invokeLater(() -> {
+	            DroneDashboard dashboard = new DroneDashboard();
+	            dashboard.setVisible(true);
+	        });
+	    }
 }
 
 class PieChartPanel extends JPanel {

@@ -174,7 +174,6 @@ public class DroneController {
     /**
      * Endpoint to calculate the average speed of all drones
      * Maps to GET requests at "/api/drones/average-speed/all"
-     * 
      * @param limit the maximum number of entries to consider 
      * @param offset the starting point for pagination 
      * @return a ResponseEntity containing the average speed as a double or an error response

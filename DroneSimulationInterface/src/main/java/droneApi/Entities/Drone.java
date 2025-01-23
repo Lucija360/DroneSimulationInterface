@@ -20,18 +20,18 @@ public class Drone {
      @JsonFormat(pattern = "MMM. dd, yyyy, h:mm a", shape = JsonFormat.Shape.STRING)	// Specifies the format of the date when serialized
      																					// The date is serialized as a string in the format you define,
      																					// making it easier to read and understand.
-     // Timestamp when the drone was created
+    // Timestamp when the drone was created
     private Date created;
     
-     @JsonProperty("serialnumber") // Maps JSON field "serialnumber" to this field
+    @JsonProperty("serialnumber") // Maps JSON field "serialnumber" to this field
     // Unique serial number of the drone
     private String serialnumber;
      
-     @JsonProperty("carriage_weight") // Maps JSON field "carriage_weight" to this field
+    @JsonProperty("carriage_weight") // Maps JSON field "carriage_weight" to this field
     // Weight of the drone's carriage
     private int carriageWeight;
      
-     @JsonProperty("carriage_type") // Maps JSON field "carriage_type" to this field
+    @JsonProperty("carriage_type") // Maps JSON field "carriage_type" to this field
     // Type of the drone's carriage (SEN, ACT, NOT)
     private String carriageType;
 

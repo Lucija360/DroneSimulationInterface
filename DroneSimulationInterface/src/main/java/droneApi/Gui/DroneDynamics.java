@@ -11,7 +11,7 @@ import java.util.List;
 
 public class DroneDynamics extends JFrame {
 
-    private JTable dynamicsTable;
+	private JTable dynamicsTable;
     private DefaultTableModel tableModel;
 
     public DroneDynamics() {
@@ -29,7 +29,10 @@ public class DroneDynamics extends JFrame {
         dynamicsPanel.add(headerLabel, BorderLayout.NORTH);
 
         // Table for Drone Dynamics Data
-        String[] columnNames = {"Drone", "Timestamp", "Speed", "Roll", "Pitch", "Yaw", "Longitude", "Latitude", "Battery", "Last Seen", "Status"};
+        String[] columnNames = {
+            "Drone", "Timestamp", "Speed", "Roll", "Pitch", "Yaw",
+            "Longitude", "Latitude", "Battery (mAh)", "Last Seen", "Status"
+        };
         tableModel = new DefaultTableModel(columnNames, 0);
         dynamicsTable = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(dynamicsTable);
@@ -41,7 +44,7 @@ public class DroneDynamics extends JFrame {
 
         // Refresh Button
         JButton refreshButton = new JButton("Refresh Data");
-        refreshButton.addActionListener(e -> fetchAndDisplayDroneDynamics());
+        refreshButton.addActionListener(e -> fetchAndDisplayDroneDynamics(true));
         buttonPanel.add(refreshButton);
 
         // Back to main menu button
@@ -58,14 +61,15 @@ public class DroneDynamics extends JFrame {
         add(dynamicsPanel);
         setLocationRelativeTo(null);
 
-        // Fetch data automatically on page load
-        fetchAndDisplayDroneDynamics();
+        // Fetch data automatically on page load (without message)
+        fetchAndDisplayDroneDynamics(false);
     }
 
     /**
      * Fetches and displays drone dynamics from the API.
+     * @param showMessage Whether to show success or error messages.
      */
-    private void fetchAndDisplayDroneDynamics() {
+    private void fetchAndDisplayDroneDynamics(boolean showMessage) {
         try {
             List<droneApi.Entities.DroneDynamics> dynamics = fetchDroneDynamicsFromApi(10, 0);
 
@@ -83,14 +87,17 @@ public class DroneDynamics extends JFrame {
                     drone.getAlignYaw(),
                     drone.getLongitude(),
                     drone.getLatitude(),
-                    drone.getBatteryStatus() + "%",
+                    drone.getBatteryStatus() + " mAh",  // Displaying battery in mAh
                     drone.getLastSeen(),
                     drone.getStatus()
                 };
                 tableModel.addRow(row);
             }
 
-            JOptionPane.showMessageDialog(this, "Drone dynamics fetched successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            if (showMessage) {
+                JOptionPane.showMessageDialog(this, "Drone dynamics data refreshed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            }
+
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Failed to fetch drone dynamics: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -105,7 +112,7 @@ public class DroneDynamics extends JFrame {
     private List<droneApi.Entities.DroneDynamics> fetchDroneDynamicsFromApi(int limit, int offset) {
         List<droneApi.Entities.DroneDynamics> dynamics = new ArrayList<>();
         String apiUrl = "http://localhost:8080/api/dronedynamics/?limit=" + limit + "&offset=" + offset;
-
+        
         try {
             RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<droneApi.Entities.DroneDynamics[]> response = restTemplate.getForEntity(apiUrl, droneApi.Entities.DroneDynamics[].class);
