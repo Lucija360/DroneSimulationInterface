@@ -52,6 +52,18 @@ public class DroneDashboard extends JFrame {
 
 	        tableModel = new DefaultTableModel(columnNames, 0);
 	        dynamicsTable = new JTable(tableModel);
+	        
+	     // Add MouseListener to the table to handle row clicks
+	        dynamicsTable.addMouseListener(new java.awt.event.MouseAdapter() {
+	            @Override
+	            public void mouseClicked(java.awt.event.MouseEvent evt) {
+	                int row = dynamicsTable.rowAtPoint(evt.getPoint());
+	                if (row >= 0) {
+	                    int droneId = (int) tableModel.getValueAt(row, 0);
+	                    showDroneDetails(droneId);
+	                }
+	            }
+	        });
 
 	        // Scroll pane for the table with fixed preferred size
 	        JScrollPane scrollPane = new JScrollPane(dynamicsTable);
@@ -123,9 +135,10 @@ public class DroneDashboard extends JFrame {
 	     */
 	    private void fetchAndDisplayDrones() {
 	        try {
+	        	
 	            List<Drone> drones = fetchDronesFromApi(10, 0);
 
-	            // Clear existing rows
+	            // Clear existing rows in the table before populating new data
 	            tableModel.setRowCount(0);
 
 	            // Add fetched drones to the table model
@@ -136,7 +149,7 @@ public class DroneDashboard extends JFrame {
 	                        drone.getDronetype(),
 	                        formattedDate,
 	                        drone.getSerialnumber(),
-	                        drone.getCarriageWeight(),
+	                        drone.getCarriageWeight() + " g",
 	                        drone.getCarriageType(),
 	                        "20 km/h",  // Hardcoded values
 	                        "200 km",   // Hardcoded values
@@ -146,32 +159,86 @@ public class DroneDashboard extends JFrame {
 	                tableModel.addRow(row);
 	            }
 	        } catch (Exception ex) {
+	        	
+	        	// Show an error message dialog in case of failure
 	            JOptionPane.showMessageDialog(this, "Failed to fetch drone data: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 	        }
 	    }
 
 	    /**
 	     * Fetch drones from the DroneController API.
+	     * @param limit Number of results to fetch.
+	     * @param offset Index to start fetching from.
+	     * @return List of Drone objects.
 	     */
 	    private List<Drone> fetchDronesFromApi(int limit, int offset) {
+	    	
+	    	// Create an empty list to store the retrieved drones
 	        List<Drone> drones = new ArrayList<>();
+	        
+	        // Construct the API URL with query parameters for pagination
 	        String apiUrl = "http://localhost:8080/api/drones/?limit=" + limit + "&offset=" + offset;
 
 	        try {
+	        	// Initialize a RestTemplate instance to handle HTTP requests
 	            RestTemplate restTemplate = new RestTemplate();
+	            
+	            // Make a GET request to the API and receive a response containing an array of Drone objects
 	            ResponseEntity<Drone[]> response = restTemplate.getForEntity(apiUrl, Drone[].class);
-
+	            
+	            // Check if the response status is successful (HTTP 2xx codes) and response body is not null
 	            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+	            	
+	            	// Iterate through the response body (array of Drone objects) and add each to the list
 	                for (Drone drone : response.getBody()) {
 	                    drones.add(drone);
 	                }
 	            }
 	        } catch (Exception ex) {
+	        	// Handle exceptions that may occur during the API call
 	            throw new RuntimeException("Error fetching drones from API: " + ex.getMessage(), ex);
 	        }
-
+	        
+	        // Return the list of fetched drones
 	        return drones;
 	    }
+	    
+	    /**
+	     * Fetch drones by id from the DroneController API.
+	     * @param droneId The unique ID of the drone to fetch details for.
+	     * @return Drone object.
+	     */
+	    private void showDroneDetails(int droneId) {
+	        try {
+	        	
+	        	// Construct the API URL to fetch drone details using the provided drone ID
+	            String apiUrl = "http://localhost:8080/api/drones/" + droneId;
+	            
+	            // Initialize a RestTemplate instance to handle HTTP requests
+	            RestTemplate restTemplate = new RestTemplate();
+	            
+	            // Make a GET request to fetch a single Drone object by its ID
+	            ResponseEntity<Drone> response = restTemplate.getForEntity(apiUrl, Drone.class);
+
+	            // Check if the response status is successful (HTTP 2xx codes) and response body is not null
+	            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+	            	// Retrieve the drone object from the response
+	                Drone drone = response.getBody();
+	                
+	                // Open a new window to display the drone details
+	                new DroneDetailsWindow(drone);
+	            } else {
+	            	
+	            	// Show an error message if the drone was not found (HTTP 404 or empty response)
+	                JOptionPane.showMessageDialog(this, "Drone not found.", "Error", JOptionPane.ERROR_MESSAGE);
+	            }
+	        } catch (Exception ex) {
+	        	
+	        	// Handle exceptions that may occur during the API call and show an error dialog
+	            JOptionPane.showMessageDialog(this, "Error fetching drone details: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+	        }
+	    }
+
 
 	    public static void main(String[] args) {
 	        SwingUtilities.invokeLater(() -> {

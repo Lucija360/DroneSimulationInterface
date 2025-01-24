@@ -197,6 +197,8 @@ public class DroneApiService {
     
     /**
      * Fetches a list of drones from the Drone API.
+     * @param limit Number of results to fetch.
+     * @param offset Index to start fetching from.
      * @return a list of Drone objects.
      */   
     public List<Drone> fetchDrones(int limit, int offset) {
@@ -358,9 +360,10 @@ public class DroneApiService {
     
     
     /**
-     * Fetches a list of drone types from the Drone API.
+     * Fetches a list of drone types from the Drone API. 
+     * @param limit Number of results to fetch.
+     * @param offset Index to start fetching from.
      * @return a list of Drone type objects.
-     * NOTE : Method and endpoint are functional -> data retrieval works
      */   
     public List<DroneType> fetchDroneTypes(int limit, int offset) {
         logger.trace("Entered fetchDroneTypes method.");
@@ -427,9 +430,12 @@ public class DroneApiService {
         // Return the list of fetched drones
         return droneTypes;
     }
+    
 
     /**
      * Fetches a list of drone dynamics from the Drone API.
+     * @param limit Number of results to fetch.
+     * @param offset Index to start fetching from.
      * @return a list of Drone dynamics objects.
      */   
     public List<DroneDynamics> fetchDroneDynamics(int limit, int offset) {
@@ -465,6 +471,10 @@ public class DroneApiService {
                 // Loop through each drone dynamic in the response array
                 for (int i = 0; i < dynamicsArray.length(); i++) {
                     var obj = dynamicsArray.getJSONObject(i);
+                    
+                    // Format longitude and latitude to six decimal places
+                    String formattedLongitude = String.format("%.6f", Double.parseDouble(obj.getString("longitude")));
+                    String formattedLatitude = String.format("%.6f", Double.parseDouble(obj.getString("latitude")));
 
                     // Create a DroneDynamic object and populate its fields
                     DroneDynamics droneDynamics = new DroneDynamics(
@@ -474,8 +484,8 @@ public class DroneApiService {
                         obj.getString("align_roll"),
                         obj.getString("align_pitch"),
                         obj.getString("align_yaw"),
-                        obj.getString("longitude"),
-                        obj.getString("latitude"),
+                        formattedLongitude,
+                        formattedLatitude,
                         obj.getInt("battery_status"),
                         obj.getString("last_seen"),
                         obj.getString("status")
@@ -500,6 +510,72 @@ public class DroneApiService {
         return droneDynamicsList;
     }
     
+    
+    /**
+     * Fetch drone data from the external API by drone ID.
+     * @param id The ID of the drone to fetch.
+     * @return A Drone object containing drone details.
+     */
+    public Drone fetchDroneById(int id) {
+        logger.trace("Entered fetchDroneById method with id={}", id);
+
+        // Construct the request URL for fetching the drone by ID
+        String url = apiUrl + "drones/" + id + "/?format=json";
+
+        try {
+            // Dynamically load the API token
+            String token = loadApiToken(); // Load the token from config.json
+
+            // Prepare HTTP headers with authentication token
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", token); // Use Token-based authentication
+            headers.set("User-Agent", "JavaDroneApp"); // Include a user agent for better API identification
+            headers.set("Accept", "application/json");
+
+            // Create the entity with headers
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Perform the HTTP GET request
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+
+            // Check if the response status is OK
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JSONObject obj = new JSONObject(response.getBody());
+
+                // Fetch drone type name from its API URL
+                String droneTypeUrl = obj.getString("dronetype");
+                String droneTypeName = fetchDroneTypeName(droneTypeUrl);
+
+                // Parse and convert the created timestamp
+                DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+                OffsetDateTime createdDate = OffsetDateTime.parse(obj.getString("created"), formatter);
+                Date date = Date.from(createdDate.toInstant());
+
+                // Return the constructed Drone object
+                return new Drone(
+                    obj.getInt("id"),
+                    droneTypeName,
+                    date,
+                    obj.getString("serialnumber"),
+                    obj.getInt("carriage_weight"),
+                    obj.getString("carriage_type")
+                );
+            }
+        } catch (HttpClientErrorException ex) {
+            // Log HTTP-specific errors and rethrow the exception
+            logger.error("HTTP Error: Status={}, Response={}", ex.getStatusCode(), ex.getResponseBodyAsString(), ex);
+            throw ex;
+        } catch (Exception ex) {
+            // Log unexpected errors and rethrow as a runtime exception
+            logger.error("Unexpected Error: {}", ex.getMessage(), ex);
+            throw new RuntimeException("Failed to fetch drone by ID", ex);
+        }
+
+        // Return null if the drone was not found or an error occurred
+        return null;
+    }
+
+  
     // The method for calculating the average speed of drones
     /**
      * Calculates the average speed of all drones from the "DroneDynamics" data.

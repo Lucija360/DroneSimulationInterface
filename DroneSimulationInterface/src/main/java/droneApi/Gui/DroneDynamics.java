@@ -67,13 +67,16 @@ public class DroneDynamics extends JFrame {
 
     /**
      * Fetches and displays drone dynamics from the API.
+     * This method retrieves drone dynamics data and populates the table for visualization.
      * @param showMessage Whether to show success or error messages.
      */
     private void fetchAndDisplayDroneDynamics(boolean showMessage) {
         try {
+        	
+        	// Fetch a list of drone dynamics data from the API with pagination (limit = 10, offset = 0)
             List<droneApi.Entities.DroneDynamics> dynamics = fetchDroneDynamicsFromApi(10, 0);
 
-            // Clear existing rows
+            // Clear any existing rows in the table before inserting new data
             tableModel.setRowCount(0);
 
             // Populate the table with fetched data
@@ -91,41 +94,57 @@ public class DroneDynamics extends JFrame {
                     drone.getLastSeen(),
                     drone.getStatus()
                 };
+                // Add the populated row to the table model for display
                 tableModel.addRow(row);
             }
-
+            
+            // If showMessage is true, display a success message to the user
             if (showMessage) {
                 JOptionPane.showMessageDialog(this, "Drone dynamics data refreshed successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
             }
 
         } catch (Exception ex) {
+        	
+        	// Show an error message if fetching data fails
             JOptionPane.showMessageDialog(this, "Failed to fetch drone dynamics: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     /**
      * Fetch drone dynamics from the DroneController API.
+     * This method makes an HTTP request to retrieve drone dynamics data.
      * @param limit Number of results to fetch.
      * @param offset Index to start fetching from.
      * @return List of DroneDynamics objects.
      */
     private List<droneApi.Entities.DroneDynamics> fetchDroneDynamicsFromApi(int limit, int offset) {
+    	
+    	// Create an empty list to store the drone dynamics data
         List<droneApi.Entities.DroneDynamics> dynamics = new ArrayList<>();
+        
+        // Create an empty list to store the drone dynamics data
         String apiUrl = "http://localhost:8080/api/dronedynamics/?limit=" + limit + "&offset=" + offset;
         
         try {
+        	// Create an instance of RestTemplate to perform the HTTP request
             RestTemplate restTemplate = new RestTemplate();
+            
+            // Make a GET request to the API and receive a response containing an array of DroneDynamics objects
             ResponseEntity<droneApi.Entities.DroneDynamics[]> response = restTemplate.getForEntity(apiUrl, droneApi.Entities.DroneDynamics[].class);
 
+            // Check if the API response was successful (HTTP 2xx codes) and contains a valid response body
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 for (droneApi.Entities.DroneDynamics drone : response.getBody()) {
                     dynamics.add(drone);
                 }
             }
         } catch (Exception ex) {
+        	
+        	// If an error occurs during the API call, throw a runtime exception with details
             throw new RuntimeException("Error fetching drone dynamics from API: " + ex.getMessage(), ex);
         }
 
+        // Return the list of fetched drone dynamics data
         return dynamics;
     }
 

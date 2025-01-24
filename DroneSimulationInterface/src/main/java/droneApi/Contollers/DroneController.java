@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -170,6 +171,49 @@ public class DroneController {
     	    }
      }
     
+    
+    /**
+     * Endpoint to retrieve a drone by its ID.
+     * Maps to GET requests at "/api/drones/{id}".
+     * @param id The unique drone ID.
+     * @return A ResponseEntity containing drone data or an error response.
+     */
+    @Operation(summary = "Retrieve drone by ID", description = "Fetches details of a drone by its ID.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved drone details."),
+        @ApiResponse(responseCode = "404", description = "Drone not found."),
+        @ApiResponse(responseCode = "500", description = "Error retrieving drone details.")
+    })
+    @GetMapping(value = "/drones/{id}", produces = "application/json")
+    public ResponseEntity<Drone> getDroneById(@PathVariable int id) {
+        logger.trace("Entered getDroneById endpoint with id={}", id);
+        
+        try {
+        	
+        	// Fetch the list of specific drone from the service layer
+            Drone drone = droneApiService.fetchDroneById(id);
+            
+            if (drone != null) {
+            	
+                logger.trace("Successfully retrieved drone with id={}", id);
+                
+                // Return the specific drone with a 200 OK status
+                return ResponseEntity.ok(drone);
+            } else {
+            	
+            	// Return a 404 Drone not found response
+                return ResponseEntity.status(404).build();
+            }
+        } catch (Exception ex) {
+        	
+        	// Log an error if drone retrieval fails
+            logger.error("Failed to retrieve drone by ID: {}", ex.getMessage(), ex);
+            
+            // Return a 500 Internal Server Error response
+            return ResponseEntity.status(500).build();
+        }
+    }
+
     
     /**
      * Endpoint to calculate the average speed of all drones

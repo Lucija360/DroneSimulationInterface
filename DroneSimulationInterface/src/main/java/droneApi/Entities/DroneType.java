@@ -1,34 +1,48 @@
 package droneApi.Entities;
 
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Entity class representing a Drone Type.
  */
 public class DroneType {
 
+		@JsonProperty("id")
 		// Unique identifier for the drone type
 	 	private int id;
 	 	
+		@JsonProperty("manufacturer")
 	 	// Manufacturer name of the drone type
 	    private String manufacturer;
 	    
+		@JsonProperty("typename")
 	    // Name of the drone type
 	    private String typename;
 	    
+		@JsonProperty("weight")
 	    // Weight of the drone type
 	    private int weight;
 	    
+		@JsonProperty("max_speed")
 	    // Maximum speed of the drone type
 	    private int maxSpeed;
 	    
+		@JsonProperty("battery_capacity")
 	    // Maximum battery capacity of the drone type
 	    private int batteryCapacity;
 	    
+		@JsonProperty("control_range")
 	    // Control range of the drone type
 	    private int controlRange;
 	    
+		 @JsonProperty("max_carriage")
 	    // Maximum carriage capacity, optional field
 	    private Integer maxCarriage; 
 	    
+	    // Default constructor required for Jackson deserialization
+	    public DroneType() {
+	    }
 	    
 	    /**
 	     * Constructor to initialize all fields of the DroneType entity.
