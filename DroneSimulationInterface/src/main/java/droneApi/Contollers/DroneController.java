@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
+import java.util.Map;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -20,7 +22,7 @@ import droneApi.Entities.DroneDynamics;
 import droneApi.Entities.DroneType;
 
 /**
- * REST controller for managing drone-related endpoints.
+ * REST controller for managing drone-related endpoints
  */
 @RestController
 @RequestMapping("/api")
@@ -33,8 +35,8 @@ public class DroneController {
     private final DroneApiService droneApiService;
 
     /**
-     * Constructor that initializes the DroneApiService using dependency injection.
-     * @param droneApiService the service that interacts with the drone API.
+     * Constructor that initializes the DroneApiService using dependency injection
+     * @param droneApiService the service that interacts with the drone API
      */
     @Autowired
     public DroneController(DroneApiService droneApiService) {
@@ -42,9 +44,9 @@ public class DroneController {
     }
     
     /**
-     * Endpoint to verify server accessibility.
-     * Maps to GET requests at "/".
-     * @return a ResponseEntity with a success message or error response.
+     * Endpoint to verify server accessibility
+     * Maps to GET requests at "/"
+     * @return a ResponseEntity with a success message or error response
      */
     @Operation(summary = "Check server accessibility", description = "Checks if the server is accessible.")
     @ApiResponses(value = {
@@ -65,9 +67,9 @@ public class DroneController {
     }
     
     /**
-     * Endpoint to retrieve a list of available drones.
-     * Maps to GET requests at "/api/drones/".
-     * @return a ResponseEntity containing a list of Drone objects or an error response.
+     * Endpoint to retrieve a list of available drones
+     * Maps to GET requests at "/api/drones/"
+     * @return a ResponseEntity containing a list of Drone objects or an error response
      */
     @Operation(summary = "Retrieve list of drones", description = "Fetches a list of available drones.")
     @ApiResponses(value = {
@@ -99,11 +101,11 @@ public class DroneController {
     
     
     /**
-     * Endpoint to retrieve drone types.
-     * Maps to GET requests at "/api/dronetypes/".
-     * @param limit Number of results to return per page (default: 10).
-     * @param offset Index to start fetching results from (default: 0).
-     * @return a ResponseEntity containing a list of drone types or an error response.
+     * Endpoint to retrieve drone types
+     * Maps to GET requests at "/api/dronetypes/"
+     * @param limit Number of results to return per page (default: 10)
+     * @param offset Index to start fetching results from (default: 0)
+     * @return a ResponseEntity containing a list of drone types or an error response
      */
     @Operation(summary = "Retrieve list of drone types", description = "Fetches a list of available drone types.")
     @ApiResponses(value = {
@@ -137,11 +139,11 @@ public class DroneController {
     
     
     /**
-     * Endpoint to retrieve drone dynamics.
-     * Maps to GET requests at "/api/dronedynamics/".
-     * @param limit Number of results to return per page (default: 10).
-     * @param offset Index to start fetching results from (default: 0).
-     * @return a ResponseEntity containing dynamic data for drones or an error response.
+     * Endpoint to retrieve drone dynamics
+     * Maps to GET requests at "/api/dronedynamics/"
+     * @param limit Number of results to return per page (default: 10)
+     * @param offset Index to start fetching results from (default: 0)
+     * @return a ResponseEntity containing dynamic data for drones or an error response
      */
     @Operation(summary = "Retrieve drone dynamics", description = "Fetches dynamic data for drones.")
     @ApiResponses(value = {
@@ -173,10 +175,10 @@ public class DroneController {
     
     
     /**
-     * Endpoint to retrieve a drone by its ID.
-     * Maps to GET requests at "/api/drones/{id}".
-     * @param id The unique drone ID.
-     * @return A ResponseEntity containing drone data or an error response.
+     * Endpoint to retrieve a drone by its ID
+     * Maps to GET requests at "/api/drones/{id}"
+     * @param id The unique drone ID
+     * @return A ResponseEntity containing drone data or an error response
      */
     @Operation(summary = "Retrieve drone by ID", description = "Fetches details of a drone by its ID.")
     @ApiResponses(value = {
@@ -252,4 +254,27 @@ public class DroneController {
     	        return ResponseEntity.status(500).build();
     	    }
     	}
+    @Operation(summary = "Get top manufacturers", description = "Fetches the top manufacturers by frequency.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved top manufacturers."),
+        @ApiResponse(responseCode = "500", description = "Error retrieving manufacturers.")
+    })
+    @GetMapping(value = "/top-manufacturers", produces = "application/json")
+    public ResponseEntity<Map<String, Long>> getTopManufacturers(
+        @RequestParam(defaultValue = "3") int topN,  // Optional parameter for top N manufacturers (defaults to 3)
+        @RequestParam(defaultValue = "100") int limit,  // Optional parameter for the limit (defaults to 100)
+        @RequestParam(defaultValue = "0") int offset    // Optional parameter for the offset (defaults to 0)
+    ) {
+        try {
+            // Pass topN, limit, and offset to the service method
+            Map<String, Long> topManufacturers = droneApiService.getTopManufacturers(topN, limit, offset);
+            return ResponseEntity.ok(topManufacturers);  // Return the result with HTTP status 200 (OK)
+        } catch (Exception ex) {
+            // Error handling if something goes wrong
+            logger.error("Failed to retrieve top manufacturers: {}", ex.getMessage(), ex);
+            return ResponseEntity.status(500).build();  
+        }
+    }
+   
+    
 }

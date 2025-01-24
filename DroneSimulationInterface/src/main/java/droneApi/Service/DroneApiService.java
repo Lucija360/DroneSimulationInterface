@@ -22,10 +22,12 @@ import java.security.cert.X509Certificate;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Map;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import droneApi.Entities.Drone;
 import droneApi.Entities.DroneDynamics;
@@ -614,4 +616,40 @@ public class DroneApiService {
         // Returning the average
         return averageSpeed;
     }
+    public Map<String, Long> getTopManufacturers(int topN, int limit, int offset) {
+        logger.trace("Entered getTopManufacturers method with topN={}, limit={}, offset={}", topN, limit, offset);
+
+        // Retrieve the list of all drone types
+        List<DroneType> droneTypes = fetchDroneTypes(limit, offset);
+
+        // Map to store manufacturer counts
+        Map<String, Long> manufacturerCount = new HashMap<>();
+
+        // Count the occurrences of each manufacturer
+        for (DroneType droneType : droneTypes) {
+            String manufacturer = droneType.getManufacturer();
+            manufacturerCount.put(manufacturer, manufacturerCount.getOrDefault(manufacturer, 0L) + 1);
+        }
+
+        // Sort the manufacturers by count in descending order
+        List<Map.Entry<String, Long>> sortedEntries = new ArrayList<>(manufacturerCount.entrySet());
+        sortedEntries.sort((entry1, entry2) -> Long.compare(entry2.getValue(), entry1.getValue()));
+
+        // Collect the top N manufacturers
+        Map<String, Long> topManufacturers = new LinkedHashMap<>();
+        int count = 0;
+        for (Map.Entry<String, Long> entry : sortedEntries) {
+            if (count >= topN) break;
+            topManufacturers.put(entry.getKey(), entry.getValue());
+            count++;
+        }
+
+        logger.info("Top {} manufacturers retrieved successfully.", topN);
+        return topManufacturers;
+    
+
 }
+   
+
+}
+
