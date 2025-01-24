@@ -603,7 +603,7 @@ public class DroneApiService {
 
         // Iterate through the list of DroneDynamics and sum the speed
         for (DroneDynamics dynamics : droneDynamicsList) {
-            // Geschwindigkeitswert aus der DroneDynamics entnehmen
+            // Take speed value from DroneDynamics
             totalSpeed += dynamics.getSpeed();
             count++;
         }
