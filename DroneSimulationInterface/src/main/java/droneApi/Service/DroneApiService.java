@@ -16,6 +16,7 @@ import org.springframework.core.io.ClassPathResource;
 import java.io.InputStream;
 
 
+
 import javax.net.ssl.*;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
@@ -34,7 +35,7 @@ import droneApi.Entities.DroneDynamics;
 import droneApi.Entities.DroneType;
 
 @Service
-public class DroneApiService {
+public class DroneApiService implements DroneService {
 
 	// Logger for logging application messages
     private static final Logger logger = LoggerFactory.getLogger(DroneApiService.class);
@@ -576,8 +577,8 @@ public class DroneApiService {
         // Return null if the drone was not found or an error occurred
         return null;
     }
-
-  
+    
+    
     // The method for calculating the average speed of drones
     /**
      * Calculates the average speed of all drones from the "DroneDynamics" data.

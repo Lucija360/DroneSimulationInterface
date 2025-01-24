@@ -36,6 +36,13 @@
             <artifactId>logback-classic</artifactId>
             <version>1.4.11</version>
         </dependency>
+        
+        <!-- OpenCSV Binding -->
+	    <dependency>
+	        <groupId>com.opencsv</groupId>
+	        <artifactId>opencsv</artifactId>
+	        <version>5.7.1</version>
+	    </dependency>
 
         <!-- Spring Framework -->
         <dependency>
