@@ -8,6 +8,11 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import com.opencsv.CSVWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class DroneDynamics extends JFrame {
 
@@ -46,6 +51,11 @@ public class DroneDynamics extends JFrame {
         JButton refreshButton = new JButton("Refresh Data");
         refreshButton.addActionListener(e -> fetchAndDisplayDroneDynamics(true));
         buttonPanel.add(refreshButton);
+        
+        JButton exportButton = new JButton("Export to CSV");
+        exportButton.addActionListener(e -> exportDroneDynamicsToCSV());
+        buttonPanel.add(exportButton);
+
 
         // Back to main menu button
         JButton backToMenuButton = new JButton("Back to Main Menu");
@@ -147,6 +157,54 @@ public class DroneDynamics extends JFrame {
         // Return the list of fetched drone dynamics data
         return dynamics;
     }
+    
+    
+    /**
+     * Exports the drone dynamics data displayed in the table to a CSV file.
+     */
+    private void exportDroneDynamicsToCSV() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Save Drone Dynamics Data to CSV");
+        int userSelection = fileChooser.showSaveDialog(this);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            String filePath = fileChooser.getSelectedFile().getAbsolutePath() + ".csv";
+
+            try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
+                // Improved headers with better readability
+                String[] header = {
+                    "Drone ID", "Timestamp", "Speed (km/h)", "Roll (°)", "Pitch (°)", "Yaw (°)",
+                    "Longitude", "Latitude", "Battery Status (mAh)", "Last Seen", "Status"
+                };
+                writer.writeNext(header);
+
+                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy HH:mm a");
+
+                // Writing formatted data rows
+                for (int i = 0; i < tableModel.getRowCount(); i++) {
+                    String[] row = new String[tableModel.getColumnCount()];
+
+                    for (int j = 0; j < tableModel.getColumnCount(); j++) {
+                        Object value = tableModel.getValueAt(i, j);
+                        if (value instanceof Date) {
+                            row[j] = dateFormat.format((Date) value);  // Format date for readability
+                        } else if (value instanceof Number) {
+                            row[j] = String.format("%.2f", ((Number) value).doubleValue());  // Format numbers
+                        } else {
+                            row[j] = value.toString();
+                        }
+                    }
+
+                    writer.writeNext(row);
+                }
+
+                JOptionPane.showMessageDialog(this, "Drone dynamics exported successfully to:\n" + filePath, "Success", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Error exporting drone dynamics: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {

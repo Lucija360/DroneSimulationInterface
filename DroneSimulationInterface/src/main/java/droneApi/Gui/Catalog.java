@@ -8,6 +8,11 @@ import javax.swing.*;
 import java.awt.*;
 import javax.swing.table.DefaultTableModel;
 import java.util.List;
+import com.opencsv.CSVWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Catalog extends JFrame {
 
@@ -61,6 +66,11 @@ public class Catalog extends JFrame {
              }
          });
 
+  
+         JButton exportButton = new JButton("Export to CSV");
+         exportButton.addActionListener(e -> exportDroneTypesToCSV());
+         buttonPanel.add(exportButton);
+         
          JButton backToMenuButton = new JButton("Back to Main Menu");
          backToMenuButton.addActionListener(e -> {
              MainMenu mainMenu = new MainMenu();
@@ -150,6 +160,50 @@ public class Catalog extends JFrame {
          // Return an empty list if no data is retrieved or an error occurs
          return List.of();
      }
+     
+     
+     /**
+	  * Exports the drone types data displayed in the table to a CSV file.
+	  */
+     private void exportDroneTypesToCSV() {
+    	    JFileChooser fileChooser = new JFileChooser();
+    	    fileChooser.setDialogTitle("Save Drone Types Data to CSV");
+    	    int userSelection = fileChooser.showSaveDialog(this);
+
+    	    if (userSelection == JFileChooser.APPROVE_OPTION) {
+    	        String filePath = fileChooser.getSelectedFile().getAbsolutePath() + ".csv";
+
+    	        try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
+    	            // Improved headers for better readability
+    	            String[] header = {
+    	                "Drone Type ID", "Manufacturer", "Model", "Weight (g)", "Max Speed (km/h)", 
+    	                "Battery Capacity (mAh)", "Control Range (m)", "Max Carriage (g)"
+    	            };
+    	            writer.writeNext(header);
+
+    	            // Writing formatted data rows
+    	            for (int i = 0; i < tableModel.getRowCount(); i++) {
+    	                String[] row = new String[tableModel.getColumnCount()];
+
+    	                for (int j = 0; j < tableModel.getColumnCount(); j++) {
+    	                    Object value = tableModel.getValueAt(i, j);
+    	                    if (value instanceof Number) {
+    	                        row[j] = String.format("%.2f", ((Number) value).doubleValue());  // Format numbers
+    	                    } else {
+    	                        row[j] = value.toString();
+    	                    }
+    	                }
+
+    	                writer.writeNext(row);
+    	            }
+
+    	            JOptionPane.showMessageDialog(this, "Drone types exported successfully to:\n" + filePath, "Success", JOptionPane.INFORMATION_MESSAGE);
+    	        } catch (IOException ex) {
+    	            JOptionPane.showMessageDialog(this, "Error exporting drone types: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+    	        }
+    	    }
+    	}
+     
 
      public static void main(String[] args) {
          SwingUtilities.invokeLater(() -> {

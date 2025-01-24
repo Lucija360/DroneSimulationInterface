@@ -9,7 +9,11 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import com.opencsv.CSVWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class DroneDashboard extends JFrame {
 
@@ -114,6 +118,10 @@ public class DroneDashboard extends JFrame {
 	        });
 	        footerPanel.add(refreshButton);
 
+	        JButton exportButton = new JButton("Export to CSV");
+	        exportButton.addActionListener(e -> exportDronesToCSV());
+	        footerPanel.add(exportButton);
+
 	        JButton backToMenuButton = new JButton("Back to Main Menu");
 	        backToMenuButton.addActionListener(e -> {
 	            MainMenu mainMenu = new MainMenu();
@@ -148,7 +156,7 @@ public class DroneDashboard extends JFrame {
 	                        drone.getId(),
 	                        drone.getDronetype(),
 	                        formattedDate,
-	                        drone.getSerialnumber(),
+	                        drone.getSerialNumber(),
 	                        drone.getCarriageWeight() + " g",
 	                        drone.getCarriageType(),
 	                        "20 km/h",  // Hardcoded values
@@ -238,7 +246,56 @@ public class DroneDashboard extends JFrame {
 	            JOptionPane.showMessageDialog(this, "Error fetching drone details: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 	        }
 	    }
+	    
+	    
+	    /**
+	     *  Exports the drone data displayed in the table to a CSV file.
+	     */
+	    private void exportDronesToCSV() {
+	        JFileChooser fileChooser = new JFileChooser();
+	        fileChooser.setDialogTitle("Save Drone Data to CSV");
+	        int userSelection = fileChooser.showSaveDialog(this);
 
+	        if (userSelection == JFileChooser.APPROVE_OPTION) {
+	            String filePath = fileChooser.getSelectedFile().getAbsolutePath() + ".csv";
+
+	            try (CSVWriter writer = new CSVWriter(new FileWriter(filePath))) {
+	                // Improved header row with better readability
+	                String[] header = {
+	                    "Drone ID", "Drone Type", "Date Created", "Serial Number", 
+	                    "Carriage Weight (g)", "Carriage Type", 
+	                    "Average Speed (km/h)", "Total Distance (km)", 
+	                    "Battery Consumption (mAh/km)", "Payload Utilization (%)"
+	                };
+	                writer.writeNext(header);
+
+	                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy HH:mm a");
+
+	                // Writing formatted data rows
+	                for (int i = 0; i < tableModel.getRowCount(); i++) {
+	                    String[] row = new String[tableModel.getColumnCount()];
+
+	                    for (int j = 0; j < tableModel.getColumnCount(); j++) {
+	                        Object value = tableModel.getValueAt(i, j);
+	                        if (value instanceof Date) {
+	                            row[j] = dateFormat.format((Date) value);  // Format date for readability
+	                        } else if (value instanceof Number) {
+	                            row[j] = String.format("%.2f", ((Number) value).doubleValue());  // Format numbers
+	                        } else {
+	                            row[j] = value.toString();
+	                        }
+	                    }
+
+	                    writer.writeNext(row);
+	                }
+
+	                JOptionPane.showMessageDialog(this, "Data exported successfully to:\n" + filePath, "Success", JOptionPane.INFORMATION_MESSAGE);
+	            } catch (IOException ex) {
+	                JOptionPane.showMessageDialog(this, "Error exporting data: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+	            }
+	        }
+	    }
+	    
 
 	    public static void main(String[] args) {
 	        SwingUtilities.invokeLater(() -> {

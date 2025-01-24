@@ -88,7 +88,7 @@ public class Drones extends JFrame {
                     drone.getId(),
                     droneTypeName,
                     formattedDate,	//Formatted dat for display
-                    drone.getSerialnumber(),
+                    drone.getSerialNumber(),
                     drone.getCarriageWeight(),
                     drone.getCarriageType()
                 };
