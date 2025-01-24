@@ -22,7 +22,7 @@ import droneApi.Entities.DroneDynamics;
 import droneApi.Entities.DroneType;
 
 /**
- * REST controller for managing drone-related endpoints
+ * REST controller for managing drone-related endpoints.
  */
 @RestController
 @RequestMapping("/api")
@@ -35,8 +35,8 @@ public class DroneController {
     private final DroneApiService droneApiService;
 
     /**
-     * Constructor that initializes the DroneApiService using dependency injection
-     * @param droneApiService the service that interacts with the drone API
+     * Constructor that initializes the DroneApiService using dependency injection.
+     * @param droneApiService the service that interacts with the drone API.
      */
     @Autowired
     public DroneController(DroneApiService droneApiService) {
@@ -44,9 +44,9 @@ public class DroneController {
     }
     
     /**
-     * Endpoint to verify server accessibility
-     * Maps to GET requests at "/"
-     * @return a ResponseEntity with a success message or error response
+     * Endpoint to verify server accessibility.
+     * Maps to GET requests at "/".
+     * @return a ResponseEntity with a success message or error response.
      */
     @Operation(summary = "Check server accessibility", description = "Checks if the server is accessible.")
     @ApiResponses(value = {
@@ -67,9 +67,9 @@ public class DroneController {
     }
     
     /**
-     * Endpoint to retrieve a list of available drones
-     * Maps to GET requests at "/api/drones/"
-     * @return a ResponseEntity containing a list of Drone objects or an error response
+     * Endpoint to retrieve a list of available drones.
+     * Maps to GET requests at "/api/drones/".
+     * @return a ResponseEntity containing a list of Drone objects or an error response.
      */
     @Operation(summary = "Retrieve list of drones", description = "Fetches a list of available drones.")
     @ApiResponses(value = {
@@ -101,11 +101,11 @@ public class DroneController {
     
     
     /**
-     * Endpoint to retrieve drone types
-     * Maps to GET requests at "/api/dronetypes/"
-     * @param limit Number of results to return per page (default: 10)
-     * @param offset Index to start fetching results from (default: 0)
-     * @return a ResponseEntity containing a list of drone types or an error response
+     * Endpoint to retrieve drone types.
+     * Maps to GET requests at "/api/dronetypes/".
+     * @param limit Number of results to return per page (default: 10).
+     * @param offset Index to start fetching results from (default: 0).
+     * @return a ResponseEntity containing a list of drone types or an error response.
      */
     @Operation(summary = "Retrieve list of drone types", description = "Fetches a list of available drone types.")
     @ApiResponses(value = {
@@ -139,11 +139,11 @@ public class DroneController {
     
     
     /**
-     * Endpoint to retrieve drone dynamics
-     * Maps to GET requests at "/api/dronedynamics/"
-     * @param limit Number of results to return per page (default: 10)
-     * @param offset Index to start fetching results from (default: 0)
-     * @return a ResponseEntity containing dynamic data for drones or an error response
+     * Endpoint to retrieve drone dynamics.
+     * Maps to GET requests at "/api/dronedynamics/".
+     * @param limit Number of results to return per page (default: 10).
+     * @param offset Index to start fetching results from (default: 0).
+     * @return a ResponseEntity containing dynamic data for drones or an error response.
      */
     @Operation(summary = "Retrieve drone dynamics", description = "Fetches dynamic data for drones.")
     @ApiResponses(value = {
@@ -175,10 +175,10 @@ public class DroneController {
     
     
     /**
-     * Endpoint to retrieve a drone by its ID
-     * Maps to GET requests at "/api/drones/{id}"
-     * @param id The unique drone ID
-     * @return A ResponseEntity containing drone data or an error response
+     * Endpoint to retrieve a drone by its ID.
+     * Maps to GET requests at "/api/drones/{id}".
+     * @param id The unique drone ID.
+     * @return A ResponseEntity containing drone data or an error response.
      */
     @Operation(summary = "Retrieve drone by ID", description = "Fetches details of a drone by its ID.")
     @ApiResponses(value = {
