@@ -22,6 +22,13 @@
             <artifactId>slf4j-api</artifactId>
             <version>2.0.9</version>
         </dependency>
+        
+        <!-- Springdoc OpenAPI -->
+        <dependency>
+		    <groupId>org.springdoc</groupId>
+		    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+		    <version>2.5.0</version>
+		</dependency>
 
         <!-- SLF4J Binding -->
         <dependency>
@@ -29,6 +36,13 @@
             <artifactId>logback-classic</artifactId>
             <version>1.4.11</version>
         </dependency>
+        
+        <!-- OpenCSV Binding -->
+	    <dependency>
+	        <groupId>com.opencsv</groupId>
+	        <artifactId>opencsv</artifactId>
+	        <version>5.7.1</version>
+	    </dependency>
 
         <!-- Spring Framework -->
         <dependency>
@@ -61,6 +75,8 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    
+
 
     <build>
         <plugins>
