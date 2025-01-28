@@ -22,8 +22,13 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.io.InputStream;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -195,7 +200,13 @@ public class DroneApiService implements DroneService {
     		logger.error("Error fetching drone type name from URL:{}. Error: {}", droneTypeUrl, ex.getMessage());
     		return "Unknown Drone Type";	// In case of any error
     	}
-    }	     
+    }
+    
+    // Public wrapper method for external access
+    public String getDroneTypeName(String droneTypeUrl) {
+    	logger.trace("Entered getDroneTypeName with URL: {}", droneTypeUrl);
+    	return fetchDroneTypeName(droneTypeUrl);
+    }
     
     
     /**
@@ -235,49 +246,28 @@ public class DroneApiService implements DroneService {
             // Check if the response status is OK
             if (response.getStatusCode() == HttpStatus.OK) {
                 JSONObject jsonResponse = new JSONObject(response.getBody());
-                var droneArray = jsonResponse.getJSONArray("results");
-                
-                // Define a DateTimeFormatter for ISO 8601 format with offset
-                DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-                
-                for (int i = 0; i < droneArray.length(); i++) {
-                    var obj = droneArray.getJSONObject(i);
-                    
-                    //Intergrating fetchDroneTypeName()
-                    //Fetch the drone type name based on the URL (droneType field)
-                    String droneTypeUrl = obj.getString("dronetype");	// Assuming it's a URL
-                    String droneTypeName = fetchDroneTypeName(droneTypeUrl);	// Fetch the name using the intergrated method
-                    
-                    // Parse the created field with DateTimeFormatter
-                    String createdString = obj.getString("created");
-                    OffsetDateTime createdDate = OffsetDateTime.parse(createdString, formatter);
-
-                    // Convert OffsetDateTime to Date
-                    Date date = Date.from(createdDate.toInstant());                 
-                                        
-                    // Create a Drone object and populate its fields with the formatted date and droneType name
-                    Drone drone = new Drone(
-                        obj.getInt("id"),
-                        droneTypeName,	// Replace the URL wit the human-readable name
-                        date,		// Use the formatted Date object
-                        obj.getString("serialnumber"),
-                        obj.getInt("carriage_weight"),
-                        obj.getString("carriage_type")
-                    );
-
-                    // Add the drone to the list
-                    drones.add(drone);
-                }
-                // Handle pagination if "next" field is not null
-                String nextUrl = jsonResponse.optString("next", null);
-                if (nextUrl != null && !nextUrl.isEmpty()) {
-                    logger.debug("Fetching next page of drones from URL: {}", nextUrl);
-                    drones.addAll(fetchDronesFromNextPage(nextUrl));
-                }
-
-                logger.trace("fetchDrones completed successfully.");
-            } else {
-                logger.error("Unexpected response status: {}", response.getStatusCode());
+                var droneArray = jsonResponse.getJSONArray("results");                
+               
+                // Stream processing for raw data
+                drones = IntStream.range(0, droneArray.length())	// Convert the JSON array to a Stream
+                		.mapToObj(i -> {
+                			try {
+                				var obj = droneArray.getJSONObject(i);
+                				return new Drone(
+                						obj.getInt("id"),
+                						obj.getString("dronetype"),	// Keep raw URL for dronetype
+                						obj.getString("created"),	// Keep raw created timestamp
+                						obj.getString("serialnumber"),
+                						obj.getInt("carriage_weight"),
+                						obj.getString("carriage_type")
+                						);                				         				
+                			} catch (Exception e) {
+                				logger.error("Error processing drone at index: {}: {}", i, e.getMessage());
+                				return null;	//Handle error gracefully
+                			}
+                		})
+                		.filter(Objects::nonNull)	// Remove null entries
+                		.collect(Collectors.toList());	//Collect into a List
             }
         } catch (HttpClientErrorException ex) {
             logger.error("HTTP Error: Status {}, Body: {}", ex.getStatusCode(), ex.getResponseBodyAsString());
@@ -287,7 +277,7 @@ public class DroneApiService implements DroneService {
             throw new RuntimeException("Failed to fetch drones", ex);
         }
 
-        return drones;
+        return drones;    			
     }
     
     
@@ -315,50 +305,36 @@ public class DroneApiService implements DroneService {
                 JSONObject jsonResponse = new JSONObject(response.getBody());
                 var droneArray = jsonResponse.getJSONArray("results");
                 
-                // Define a DateTimeFormatter for ISO 8601 format with offset
-                DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-
-                for (int i = 0; i < droneArray.length(); i++) {
-                    var obj = droneArray.getJSONObject(i);
-                    
-                    //Intergrating fetchDroneTypeName()
-                    //Fetch the drone type name based on the URL (droneType field)
-                    String droneTypeUrl = obj.getString("dronetype");	// Assuming it's a URL
-                    String droneTypeName = fetchDroneTypeName(droneTypeUrl);	// Fetch the name using the intergrated method
-                                        
-                    // Parse the created field with DateTimeFormatter
-                    String createdString = obj.getString("created");
-                    OffsetDateTime createdDate = OffsetDateTime.parse(createdString, formatter);
-
-                    // Convert OffsetDateTime to Date
-                    Date date = Date.from(createdDate.toInstant());
-
-                    // Create a Drone object and populate its fields with the formatted date and droneType name
-                    Drone drone = new Drone(
-                        obj.getInt("id"),
-                        droneTypeName,	// Replace the URL wit the human-readable name
-                        date,		// Use the formatted Date object
-                        obj.getString("serialnumber"),
-                        obj.getInt("carriage_weight"),
-                        obj.getString("carriage_type")
-                    );
-                    drones.add(drone);
-                }
-
-                // Recursive call if "next" field exists
-                String next = jsonResponse.optString("next", null);
-                if (next != null && !next.isEmpty()) {
-                    drones.addAll(fetchDronesFromNextPage(next));
-                }
+             // Stream processing for raw data
+                drones = IntStream.range(0, droneArray.length())	// Convert the JSON array to a Stream
+                		.mapToObj(i -> {
+                			try {
+                				var obj = droneArray.getJSONObject(i);
+                				return new Drone(
+                						obj.getInt("id"),
+                						obj.getString("dronetype"),	// Keep raw URL for dronetype
+                						obj.getString("created"),	// Keep raw created timestamp
+                						obj.getString("serialnumber"),
+                						obj.getInt("carriage_weight"),
+                						obj.getString("carriage_type")
+                						);                				         				
+                			} catch (Exception e) {
+                				logger.error("Error processing drone at index: {}: {}", i, e.getMessage());
+                				return null;	//Handle error gracefully
+                			}
+                		})
+                		.filter(Objects::nonNull)	// Remove null entries
+                		.collect(Collectors.toList());	//Collect into a List
             }
         } catch (HttpClientErrorException ex) {
             logger.error("HTTP Error: Status {}, Body: {}", ex.getStatusCode(), ex.getResponseBodyAsString());
             throw ex;
         } catch (Exception ex) {
             logger.error("Unexpected error occurred: {}", ex.getMessage(), ex);
-            throw new RuntimeException("Failed to fetch drones from next page", ex);
+            throw new RuntimeException("Failed to fetch drones", ex);
         }
-        return drones;
+
+        return drones;    			
     }
     
     
@@ -545,20 +521,16 @@ public class DroneApiService implements DroneService {
             if (response.getStatusCode() == HttpStatus.OK) {
                 JSONObject obj = new JSONObject(response.getBody());
 
-                // Fetch drone type name from its API URL
-                String droneTypeUrl = obj.getString("dronetype");
-                String droneTypeName = fetchDroneTypeName(droneTypeUrl);
-
-                // Parse and convert the created timestamp
-                DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-                OffsetDateTime createdDate = OffsetDateTime.parse(obj.getString("created"), formatter);
-                Date date = Date.from(createdDate.toInstant());
-
-                // Return the constructed Drone object
+                // Extract raw data for dronetype and created fields
+                // Preffered for Maintainability
+                String rawDroneTypeUrl = obj.getString("dronetype");
+                String rawCreated = obj.getString("created");
+                
+                // Construct and return the Drone object with raw data
                 return new Drone(
                     obj.getInt("id"),
-                    droneTypeName,
-                    date,
+                    rawDroneTypeUrl,	// Keep raw URL for dronetype
+                    rawCreated,			// Keep raw timestamp as a String
                     obj.getString("serialnumber"),
                     obj.getInt("carriage_weight"),
                     obj.getString("carriage_type")
