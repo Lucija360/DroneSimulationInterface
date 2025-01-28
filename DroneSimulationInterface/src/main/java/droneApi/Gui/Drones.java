@@ -24,11 +24,7 @@ public class Drones extends JFrame {
 
     private JTable dronesTable; // Table for displaying drone data
     private DefaultTableModel tableModel; // Table model for dynamic updates
-    
-    // DateTimeFormatter for formatting timestamps
-    private static final DateTimeFormatter inputFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-    private static final DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MMM. dd, yyyy, h:mm a");
-
+        
     private final DroneApiService droneApiService;	//Injected service to fetch data
     
     public Drones() {
@@ -97,8 +93,8 @@ public class Drones extends JFrame {
 
             // Add fetched drones to the table model
             for (Drone drone : drones) {
-            	String droneTypeName = fetchandformatDroneType(drone.getDronetypeRaw());	//Format raw data for human-readable drone type name
-            	String formattedDate = formatDate(drone.getCreatedRaw());	// Format createdRaw          	
+            	String droneTypeName = droneApiService.getDroneTypeName(drone.getDronetypeRaw());	//Format raw data for human-readable drone type name
+            	String formattedDate = droneApiService.getFormatDate(drone.getCreatedRaw());	// Format createdRaw          	
                            
             	Object[] row = {
                     drone.getId(),
@@ -144,39 +140,7 @@ public class Drones extends JFrame {
         return drones;
     }
     
-    /**
-     * Formats the raw timestamp into a human-readable format.
-     * @param rawTimestamp		The raw timestamp string (ISO 8601 format).
-     * @return A formatted date string.
-     */
-    private String formatDate(String rawTimestamp) {
-    	try {
-    		OffsetDateTime dateTime = OffsetDateTime.parse(rawTimestamp, inputFormatter);
-    		return dateTime.format(outputFormatter);
-    	} catch (Exception ex) {
-    		logger.error("Failed to format date: {}", ex.getMessage());
-    		return "Invalid Date";
-    	}
-    }
-    
-    /**
-     * Fetch and formats the raw dronetype URL into a human-readable format.
-     * @param rawDroneType		The raw dronetype URL.
-     * @return A formatted dronetype name.
-     */
-    private String fetchandformatDroneType(String rawDroneType) {
-    	if (rawDroneType == null || rawDroneType.isEmpty()) {
-    		return "Unknown Drone Type";
-    	} 
-    	try {
-    		return droneApiService.getDroneTypeName(rawDroneType); // Resolve name via service
-    	} catch (Exception ex) {
-	        logger.error("Error fetching drone type name: {}", ex.getMessage());
-	        return "Unknown Drone Type";
-    }
-}
-    	
-    	
+       	
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {

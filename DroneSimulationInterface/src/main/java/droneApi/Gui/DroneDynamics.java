@@ -9,6 +9,9 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import com.opencsv.CSVWriter;
+
+import droneApi.Service.DroneApiService;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -18,8 +21,12 @@ public class DroneDynamics extends JFrame {
 
 	private JTable dynamicsTable;
     private DefaultTableModel tableModel;
-
+    
+    private final DroneApiService droneApiService;	//Injected service to fetch data
+    
     public DroneDynamics() {
+    	this.droneApiService = new DroneApiService();	// Initialize service instance
+    	
         setTitle("Drone Simulation - Drone Dynamics");
         setSize(800, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -84,16 +91,21 @@ public class DroneDynamics extends JFrame {
         try {
         	
         	// Fetch a list of drone dynamics data from the API with pagination (limit = 10, offset = 0)
-            List<droneApi.Entities.DroneDynamics> dynamics = fetchDroneDynamicsFromApi(10, 0);
+            List<droneApi.Entities.DroneDynamics> dynamics = droneApiService.fetchDroneDynamics(10, 0);
 
             // Clear any existing rows in the table before inserting new data
             tableModel.setRowCount(0);
 
             // Populate the table with fetched data
             for (droneApi.Entities.DroneDynamics drone : dynamics) {
-                Object[] row = {
-                    drone.getDrone(),
-                    drone.getTimestamp(),
+            	String formattedTimestamp = droneApiService.getFormatDate(drone.getTimestamp());	//Format Timestamp
+                String formattedLastSeen = droneApiService.getFormatDate(drone.getLastSeen());	// Format LastSeen
+            	String droneTypeName = droneApiService.getDroneDetails(drone.getDrone());	//Format raw data for human-readable
+            	String droneDetails = droneApiService.getDroneDetails(drone.getDrone());	//Format data
+            	
+            	Object[] row = {
+                    droneDetails,	// Formatted drone field with adjusted created timestamp
+                    formattedTimestamp,	//Human-readable timestamp
                     drone.getSpeed() + " km/h",
                     drone.getAlignRoll(),
                     drone.getAlignPitch(),
@@ -101,7 +113,7 @@ public class DroneDynamics extends JFrame {
                     drone.getLongitude(),
                     drone.getLatitude(),
                     drone.getBatteryStatus() + " mAh",  // Displaying battery in mAh
-                    drone.getLastSeen(),
+                    formattedLastSeen,	//Human-readable Last seen
                     drone.getStatus()
                 };
                 // Add the populated row to the table model for display

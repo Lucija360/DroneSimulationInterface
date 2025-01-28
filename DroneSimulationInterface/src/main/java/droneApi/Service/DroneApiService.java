@@ -26,10 +26,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
@@ -150,15 +152,46 @@ public class DroneApiService implements DroneService {
         }
     }
     
+ // DateTimeFormatter for formatting timestamps
+    private static final DateTimeFormatter inputFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+    private static final DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MMM. dd, yyyy, h:mm a");
+
+    /**
+     * Formats the raw timestamp into a human-readable format.
+     * @param rawTimestamp		The raw timestamp string (ISO 8601 format).
+     * @return A formatted date string.
+     */
+    private String FormatDate(String rawTimestamp) {
+    	try {
+    		OffsetDateTime dateTime = OffsetDateTime.parse(rawTimestamp, inputFormatter);
+    		return dateTime.format(outputFormatter);
+    	} catch (Exception ex) {
+    		logger.error("Failed to format date: {}", ex.getMessage());
+    		return "Invalid Date";
+    	}
+    }
     
     /**
-     * Fetches the drone type name based on the URL
-     * URL response is a URL pointing to another endpoint (e.g., http://dronesim.facets-labs.com/api/dronetypes/id/)
-     * @param droneTypeUrl URL of the drone type to fetch details for.
+     * Public wrapper method for external access to formatDate
+     * @param rawTimestamp
+     * @return Formatted Timestamp
+     */ 
+    public String getFormatDate(String rawTimestamp) {
+    	logger.trace("Entered getFormatDate with ISO 8601: {}", rawTimestamp);
+    	return FormatDate(rawTimestamp);
+    }
+    
+    
+    /**
+     * Generalized method (API call) to fetch data from raw URL and apply formatting logic.
+     * raw URL: URL response and pointing to another endpoint (e.g., http://dronesim.facets-labs.com/api/dronetypes/id/)
      * API call to drone type URL to return the name and other details.
-     * @return the name of the drone or unknown drone type name
+     * @param rawUrl 				The raw URL to fetch data to get more details.
+     * @param formatFunction 	A lambda or method reference to apply formatting to the fetched data.
+     * @param defaultValue 		A default value to return in case of an error.
+     * @return The formatted data or the default value.
      */
-    private String  fetchDroneTypeName(String droneTypeUrl) {
+    private <T> T fetchAndFormat(String rawUrl, Function<JSONObject, T> formatFunction, T defaultValue) {
     	try {        	
         	// Create the HTTP request with authorization and other necessary headers
         	HttpHeaders headers = new HttpHeaders();
@@ -170,42 +203,100 @@ public class DroneApiService implements DroneService {
         	HttpEntity<String> entity = new HttpEntity<>(headers);
         	
         	// Log the request URL
-        	logger.debug("Fetching drone type details from URL; {}", droneTypeUrl);
+        	logger.debug("Fetching drone details from URL; {}", rawUrl);
         	
         	// Send the HTTP GET request to fetch the drone type details (name, etc,...)
-        	ResponseEntity<String> response = restTemplate.exchange(droneTypeUrl, HttpMethod.GET, entity, String.class);
+        	ResponseEntity<String> response = restTemplate.exchange(rawUrl, HttpMethod.GET, entity, String.class);
         	
+        	// Parse and process the response
         	// Check if the response status is OK
         	if (response.getStatusCode() == HttpStatus.OK) {
         		// Parse the JSON response to inspect the structure
         		JSONObject jsonResponse = new JSONObject(response.getBody());
-        		logger.debug("Drone Type Details Response:{}", jsonResponse.toString());
+        		logger.debug("Drone Type Details Response {}:{}", rawUrl, jsonResponse.toString());
         		
-        		// If the "manufacturer" and "typename" fields exist, construct the name
-        		if (jsonResponse.has("manufacturer") && jsonResponse.has("typename")) {
-        			String manufacturer = jsonResponse.getString("manufacturer");
-        			String typename = jsonResponse.getString("typename");
-        			
-        			// Combine manufacturer and typename into the required format
-        			return manufacturer + ": " + typename;	//e.g., "GoPro: Karma"
-        		} else {
-        			logger.warn("Drone type details do not contain manufacturer and typename. Returning 'Unknown Drone Type'.");
-        			return "Unknown Drone Type";
-        		}
-        	} else {
-        		logger.error("Failed to fetch drone type details from URL: {}. Status code: {}", droneTypeUrl, response.getStatusCode());
-        		return "Unknown Drone Type";	// In case the API response is not OK
-        	}		
-    	} catch (Exception ex) {
-    		logger.error("Error fetching drone type name from URL:{}. Error: {}", droneTypeUrl, ex.getMessage());
-    		return "Unknown Drone Type";	// In case of any error
-    	}
+                // Apply the formatting function
+                return formatFunction.apply(jsonResponse);
+            } else {
+                logger.error("Failed to fetch data from URL: {}. Status code: {}", rawUrl, response.getStatusCode());
+            }
+        } catch (Exception ex) {
+            logger.error("Error fetching data from URL: {}. Error: {}", rawUrl, ex.getMessage());
+        }
+        return defaultValue;
+    }
+
+    /**
+     * Fetch and format the drone type name based on the URL response by fetching raw data from method fetchDrones
+     * @param droneTypeUrl 		The URL of the drone type.
+     * @return The formatted drone type name or "Unknown Drone Type" if unavailable.
+     */
+    public String fetchDroneTypeName(String droneTypeUrl) {
+        return fetchAndFormat(droneTypeUrl, jsonResponse -> {
+        	// If the "manufacturer" and "typename" fields exist, construct the name
+    		if (jsonResponse.has("manufacturer") && jsonResponse.has("typename")) {
+    			String manufacturer = jsonResponse.getString("manufacturer");
+    			String typename = jsonResponse.getString("typename");
+    			
+    			// Combine manufacturer and typename into the required format
+    			return manufacturer + ": " + typename;	//e.g., "GoPro: Karma"
+            }
+            return "Unknown Drone Type";
+        }, "Unknown Drone Type");
     }
     
-    // Public wrapper method for external access
+    /**
+     * Public wrapper method for external access to fetchDroneTypeName
+     * @param droneTypeUrl
+     * @return Formatted String (need to choose another word to fit)
+     */ 
     public String getDroneTypeName(String droneTypeUrl) {
     	logger.trace("Entered getDroneTypeName with URL: {}", droneTypeUrl);
     	return fetchDroneTypeName(droneTypeUrl);
+    }
+
+    /**
+     * Fetch and format data for the Drone field by fetching DroneDynamics.
+     * Ensure the created field is adjusted to UTC timezone (+00:00).
+     * @param DroneUrl 		The URL to fetch drone details from raw URL fetching from drone.
+     * @return The formatted drone details data or "Unknown Drone" if unavailable.
+     */
+    public String fetchDroneDetails(String DroneUrl) {
+        return fetchAndFormat(DroneUrl, jsonResponse -> {
+        	// If the "serialnumber" and "created" fields exist, construct the name
+    		if (jsonResponse.has("serialnumber") && jsonResponse.has("created")) {
+    			String serialnumber = jsonResponse.getString("serialnumber");
+    			String createdRaw = jsonResponse.getString("created");
+    			
+    			try {
+    				//Parse and adjust the timestamp to UTC (+00:00)
+    				//Parse the raw Timestamp
+    				OffsetDateTime createdDateTime = OffsetDateTime.parse(createdRaw);
+    				//Adjust to UTC timezone
+                    OffsetDateTime createdInUtc = createdDateTime.withOffsetSameInstant(ZoneOffset.UTC);                    
+                    // Format the adjusted timestamp as "yyyy-MM-dd HH:mm:ss.SSSSSS+00:00" with explicit +00:00 instead of Z
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSXXX");
+                    String formattedCreated = createdInUtc.format(formatter).replace("Z", "+00:00");
+                    
+    				// Combine "serialnumber" and "created" data into the required format
+                    return "Drone: " + serialnumber + " (created: " + formattedCreated + ")";	//e.g., "Drone: PoD8-2029-804760 (created: 2025-01-10 20:25:25.402566+00:00)"
+    			} catch (Exception ex) {
+    				logger.error("Failed to process created field: {}. Error; {}", createdRaw, ex.getMessage());
+    				return "Drone: " + serialnumber + " (created: Invalid Date)";
+    			}    			
+            }
+            return "Unknown Drone";
+        }, "Unknown Drone");
+    }
+    
+    /**
+     * Public wrapper method for external access to fetchDroneDetails
+     * @param DroneUrl
+     * @return Formatted String ((need to choose another word to fit)
+     */ 
+    public String getDroneDetails(String DroneUrl) {
+    	logger.trace("Entered getDroneDetails with URL: {}", DroneUrl);
+    	return fetchDroneDetails(DroneUrl);
     }
     
     

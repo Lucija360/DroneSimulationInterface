@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class DroneDynamics {
 	
 		@JsonProperty("drone")
-		// Name or identifier of the drone
+		// Details of the drone include Serialnumber and Created time
 	  	private String drone;
 	  	
 		@JsonProperty("timestamp")
