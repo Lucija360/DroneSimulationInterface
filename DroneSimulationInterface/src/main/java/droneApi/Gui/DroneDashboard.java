@@ -1,33 +1,21 @@
 package droneApi.Gui;
 
 import droneApi.Entities.Drone;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import com.opencsv.CSVWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.Date;
-import java.text.SimpleDateFormat;
 
 public class DroneDashboard extends JFrame {
-	
-	private static final Logger logger = LoggerFactory.getLogger(Drone.class);	// Logger defined here at the class level
-																				// logs message for entire class
-
-	// DateTimeFormatter for formatting timestamps
-	private static final DateTimeFormatter inputFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-	private static final DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MMM. dd, yyyy, h:mm a");
-
 
 	 private JTable dynamicsTable;
 	 private DefaultTableModel tableModel;
@@ -162,11 +150,12 @@ public class DroneDashboard extends JFrame {
 	            tableModel.setRowCount(0);
 
 	            // Add fetched drones to the table model
-	            for (Drone drone : drones) {	                
+	            for (Drone drone : drones) {
+	                String formattedDate = new SimpleDateFormat("MMM. dd, yyyy, h:mm a").format(drone.getCreated());
 	                Object[] row = {
 	                        drone.getId(),
-	                        formatDroneType(drone.getDronetypeRaw()),
-	                        formatDate(drone.getCreatedRaw()),
+	                        drone.getDronetype(),
+	                        formattedDate,
 	                        drone.getSerialNumber(),
 	                        drone.getCarriageWeight() + " g",
 	                        drone.getCarriageType(),
@@ -178,40 +167,10 @@ public class DroneDashboard extends JFrame {
 	                tableModel.addRow(row);
 	            }
 	        } catch (Exception ex) {
-	        	logger.error("Failed to fetch drone data: {}", ex.getMessage());
+	        	
 	        	// Show an error message dialog in case of failure
 	            JOptionPane.showMessageDialog(this, "Failed to fetch drone data: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 	        }
-	    }
-	    
-	    /**
-	     * Formats the raw timestamp into a human-readable format.
-	     * @param rawTimestamp		The raw timestamp string (ISO 8601 format).
-	     * @return A formatted date string.
-	     */
-	    private String formatDate(String rawTimestamp) {
-	    	try {
-	    		OffsetDateTime dateTime = OffsetDateTime.parse(rawTimestamp, inputFormatter);
-	    		return dateTime.format(outputFormatter);
-	    	} catch (Exception ex) {
-	    		logger.error("Failed to format date: {}", ex.getMessage());
-	    		return "Invalid Date";
-	    	}
-	    }
-	    
-	    /**
-	     * Formats the raw dronetype URL into a human-readable format.
-	     * @param rawDroneType		The raw dronetype URL.
-	     * @return A formatted dronetype name.
-	     */
-	    private String formatDroneType(String rawDroneType) {
-	    	if (rawDroneType == null || rawDroneType.isEmpty()) {
-	    		return "Unknown Drone Type";
-	    	}
-	    	
-	    	// Extract ID or details from the URL if needed
-	    	return rawDroneType.replace("http://dronesim.facets-labs.com/api/dronetypes/", "Type-").replace("/", "");
-	    	
 	    }
 
 	    /**
@@ -309,9 +268,7 @@ public class DroneDashboard extends JFrame {
 	                    "Battery Consumption (mAh/km)", "Payload Utilization (%)"
 	                };
 	                writer.writeNext(header);
-	                
 
-	                // Formatters for Date and Numbers
 	                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy HH:mm a");
 
 	                // Writing formatted data rows
@@ -320,13 +277,12 @@ public class DroneDashboard extends JFrame {
 
 	                    for (int j = 0; j < tableModel.getColumnCount(); j++) {
 	                        Object value = tableModel.getValueAt(i, j);
-	                        
-	                        if (value instanceof String && isRawDate(value.toString())) {
-	                            row[j] = formatDate(value.toString());  // Format raw date strings
+	                        if (value instanceof Date) {
+	                            row[j] = dateFormat.format((Date) value);  // Format date for readability
 	                        } else if (value instanceof Number) {
 	                            row[j] = String.format("%.2f", ((Number) value).doubleValue());  // Format numbers
 	                        } else {
-	                            row[j] = value.toString();	// Default to String representation
+	                            row[j] = value.toString();
 	                        }
 	                    }
 
@@ -336,26 +292,10 @@ public class DroneDashboard extends JFrame {
 	                JOptionPane.showMessageDialog(this, "Data exported successfully to:\n" + filePath, "Success", JOptionPane.INFORMATION_MESSAGE);
 	            } catch (IOException ex) {
 	                JOptionPane.showMessageDialog(this, "Error exporting data: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-	                logger.error("Failed to export data to CSV: {}", ex.getMessage());
 	            }
 	        }
 	    }
 	    
-	    /**
-	     * Helper method to check if a string is a raw date(ISO 8601)
-	     * @param value		The string value to check
-	     * @return True		if the string matches the ISO 8601 date format
-	     * @return False	otherwise.
-	     */
-	    private boolean isRawDate(String value) {
-	    	try {
-	    		OffsetDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-	    		return true;
-	    	} catch (Exception ex) {
-	    		return false;
-	    	}
-	    }  
-	    	    
 
 	    public static void main(String[] args) {
 	        SwingUtilities.invokeLater(() -> {

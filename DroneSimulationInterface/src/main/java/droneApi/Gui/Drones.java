@@ -1,8 +1,6 @@
 package droneApi.Gui;
 
 import droneApi.Entities.Drone;
-import droneApi.Service.DroneApiService;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -10,30 +8,16 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.text.SimpleDateFormat;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Date;
 
 public class Drones extends JFrame {
-	
-	private static final Logger logger = LoggerFactory.getLogger(Drone.class);	// Logger defined here at the class level
-																				// logs message for entire class
 
     private JTable dronesTable; // Table for displaying drone data
     private DefaultTableModel tableModel; // Table model for dynamic updates
-    
-    // DateTimeFormatter for formatting timestamps
-    private static final DateTimeFormatter inputFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-    private static final DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MMM. dd, yyyy, h:mm a");
 
-    private final DroneApiService droneApiService;	//Injected service to fetch data
-    
     public Drones() {
-    	this.droneApiService = new DroneApiService();	//Initialize service instance
-    	
         setTitle("Drone Simulation - Drones");
         setSize(600, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -89,21 +73,21 @@ public class Drones extends JFrame {
     private void fetchAndDisplayDrones() {
         try {
             // Fetch drones using the DroneController API endpoint
-            List<Drone> drones = droneApiService.fetchDrones(10, 0); // Fetch data from the service
-            														// with a limit and offset
+            List<Drone> drones = fetchDronesFromApi(10, 0); // Fetch with a limit and offset
 
             // Clear existing rows in the table model
             tableModel.setRowCount(0);
 
             // Add fetched drones to the table model
             for (Drone drone : drones) {
-            	String droneTypeName = fetchandformatDroneType(drone.getDronetypeRaw());	//Format raw data for human-readable drone type name
-            	String formattedDate = formatDate(drone.getCreatedRaw());	// Format createdRaw          	
-                           
+            	String droneTypeName = drone.getDronetype();	//Human-readable drone type name
+            	// Convert the Date to a formatted string
+            	String formattedDate = new SimpleDateFormat("MMM. dd, yyyy, h:mm a").format(drone.getCreated());
+                
             	Object[] row = {
                     drone.getId(),
-                    droneTypeName,	// Human-readable drone type name
-                    formattedDate,	//Formatted date for display
+                    droneTypeName,
+                    formattedDate,	//Formatted dat for display
                     drone.getSerialNumber(),
                     drone.getCarriageWeight(),
                     drone.getCarriageType()
@@ -113,7 +97,6 @@ public class Drones extends JFrame {
 
             JOptionPane.showMessageDialog(this, "Drones fetched successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) {
-        	logger.error("Error fetching drones: {}", ex.getMessage());
             JOptionPane.showMessageDialog(this, "Failed to fetch drones: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -143,40 +126,6 @@ public class Drones extends JFrame {
 
         return drones;
     }
-    
-    /**
-     * Formats the raw timestamp into a human-readable format.
-     * @param rawTimestamp		The raw timestamp string (ISO 8601 format).
-     * @return A formatted date string.
-     */
-    private String formatDate(String rawTimestamp) {
-    	try {
-    		OffsetDateTime dateTime = OffsetDateTime.parse(rawTimestamp, inputFormatter);
-    		return dateTime.format(outputFormatter);
-    	} catch (Exception ex) {
-    		logger.error("Failed to format date: {}", ex.getMessage());
-    		return "Invalid Date";
-    	}
-    }
-    
-    /**
-     * Fetch and formats the raw dronetype URL into a human-readable format.
-     * @param rawDroneType		The raw dronetype URL.
-     * @return A formatted dronetype name.
-     */
-    private String fetchandformatDroneType(String rawDroneType) {
-    	if (rawDroneType == null || rawDroneType.isEmpty()) {
-    		return "Unknown Drone Type";
-    	} 
-    	try {
-    		return droneApiService.getDroneTypeName(rawDroneType); // Resolve name via service
-    	} catch (Exception ex) {
-	        logger.error("Error fetching drone type name: {}", ex.getMessage());
-	        return "Unknown Drone Type";
-    }
-}
-    	
-    	
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
