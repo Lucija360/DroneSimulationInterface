@@ -9,13 +9,13 @@ public abstract class AbstractDroneEntity {
     
     protected int id;          // Unique identifier
     protected String serialNumber;  // Drone serial number
-    protected Date created;    // Timestamp of creation
+    protected String createdRaw;    // Raw timestamp of creation as a String
 
     // Constructor for common attributes
-    public AbstractDroneEntity(int id, String serialNumber, Date created) {
+    public AbstractDroneEntity(int id, String serialNumber, String createdRaw) {
         this.id = id;
         this.serialNumber = serialNumber;
-        this.created = created;
+        this.createdRaw = createdRaw;
     }
 
     // Abstract method to be implemented by subclasses
@@ -28,6 +28,6 @@ public abstract class AbstractDroneEntity {
     public String getSerialNumber() { return serialNumber; }
     public void setSerialNumber(String serialNumber) { this.serialNumber = serialNumber; }
 
-    public Date getCreated() { return created; }
-    public void setCreated(Date created) { this.created = created; }
+    public String getCreatedRaw() { return createdRaw; }
+    public void setCreatedRaw(String createdRaw) { this.createdRaw = createdRaw; }
 }
